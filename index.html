@@ -12,6 +12,19 @@
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics-compat.js"></script>
 <style>
 :root{
+  --g-950:#F4F6F7; --g-900:#FFFFFF; --g-850:#F0F3F4; --g-800:#E5EAEC; --g-750:#D9E0E3;
+  --line:#B7C3C8; --line-soft:#D8E0E3;
+  --text-1:#1B252B; --text-2:#53636C; --text-3:#73838B;
+  --amber:#A96608; --amber-soft:#FFF2D8; --amber-line:#D8A64D;
+  --cyan:#14748A; --cyan-soft:#E0F2F5;
+  --green:#287442; --green-soft:#E4F2E8;
+  --red:#B13B31; --red-soft:#FBE8E5;
+  --gold:#8A681F; --silver:#5C6A72;
+  --radius:3px;
+  --font-d:'IBM Plex Sans',sans-serif;
+  --font-m:'IBM Plex Mono',monospace;
+}
+[data-theme="dark"]{
   --g-950:#10151A; --g-900:#171F25; --g-850:#1C252C; --g-800:#222C33; --g-750:#2A343C;
   --line:#3A454E; --line-soft:#2A343C;
   --text-1:#EDF1F3; --text-2:#9DACB5; --text-3:#67757D;
@@ -20,9 +33,6 @@
   --green:#5FA777; --green-soft:#1E362A;
   --red:#D1574B; --red-soft:#3A2220;
   --gold:#D4AF6A; --silver:#B9C4CB;
-  --radius:3px;
-  --font-d:'IBM Plex Sans',sans-serif;
-  --font-m:'IBM Plex Mono',monospace;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -63,6 +73,7 @@ p{margin:0;}
 .topbar-brand .t1{font-size:12px;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase;}
 .topbar-brand .t2{font-size:15px;font-weight:600;}
 .topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.theme-toggle{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
 
 .team-chip{
   display:flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid var(--line);
@@ -564,7 +575,7 @@ function freshState(numTeams, playersPerTeam, numRounds){
     evpControl:{ draftMinutes:20, presentationMinutes:3, planningMinutes:5, draftStatus:'idle', draftEndsAt:null, presentationOrder:[], presentationIndex:0, presentationStatus:'idle', presentationEndsAt:null, planningStatus:'idle', planningEndsAt:null, dartRound:{status:'locked',throws:{}} },
     foldingControl:{ minutes:10, budget:16, underTargetMax:9, targetMin:14, targetMax:16, overachieveMax:20, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 },
     role: null, // {type:'facilitator'} | {type:'team', teamId}
-    ui:{ route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'' },
+    ui:{ route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'', theme:'light' },
     phaseStatus: { evp:'locked', marketplace:'locked' },
     leaderboardPublished:false,
     gameClosed:false,
@@ -580,6 +591,17 @@ let state = load() || freshState();
 recomputeAllScores();
 let sharedDb = null;
 let applyingRemoteState = false;
+
+function applyTheme(){
+  const theme = state.ui && state.ui.theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = theme;
+}
+function toggleTheme(){
+  state.ui.theme = state.ui.theme === 'dark' ? 'light' : 'dark';
+  applyTheme();
+  save();
+  render();
+}
 
 function sharedState(){
   // Firebase rejects undefined values left by intentionally sparse judge scores.
@@ -598,8 +620,9 @@ function normalizeTeamCodes(sessionState){
   if(!sessionState || typeof sessionState !== 'object') return freshState();
   sessionState.session = sessionState.session || freshState().session;
   if(!sessionState.ui){
-    sessionState.ui = { route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'' };
+    sessionState.ui = { route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'', theme:'light' };
   }
+  sessionState.ui.theme = sessionState.ui.theme === 'dark' ? 'dark' : 'light';
   sessionState.phaseStatus = Object.assign({ evp:'locked', marketplace:'locked' }, sessionState.phaseStatus || {});
   if(sessionState.phaseStatus.evp==='closed' && sessionState.phaseStatus.marketplace==='locked'){
     sessionState.phaseStatus.marketplace = 'planning';
@@ -707,6 +730,7 @@ function load(){
     loaded.role = local.role || null;
     loaded.ui = local.ui || loaded.ui;
   }
+  loaded.ui.theme = loaded.ui.theme === 'dark' ? 'dark' : 'light';
   return loaded;
 }
 function persistAndRender(){ save(); render(); }
@@ -728,7 +752,7 @@ function initSharedSync(){
           return;
         }
         const localRole = state.role || null;
-        const localUi = state.ui || { route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'' };
+        const localUi = state.ui || { route:'login', teamTab:'dashboard', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Retirement', selectedEventTalent:'', theme:'light' };
         applyingRemoteState = true;
         state = normalizeTeamCodes(remote);
         state.role = localRole;
@@ -1880,6 +1904,7 @@ function renderTopbar(){
   if(state.role){
     right += '<button class="btn btn-ghost btn-sm" onclick="logout()">Switch Role</button>';
   }
+  right += '<button class="btn btn-ghost btn-sm theme-toggle" onclick="toggleTheme()" aria-label="Switch to '+(state.ui.theme==='dark'?'light':'dark')+' mode">'+(state.ui.theme==='dark'?'☀ Light mode':'☾ Dark mode')+'</button>';
   right += '</div>';
   return '<div class="topbar">'+left+right+'</div>';
 }
@@ -2485,6 +2510,7 @@ function renderAdminConsole(){
 /* ============================== ROOT RENDER ============================== */
 
 function render(){
+  applyTheme();
   const app = document.getElementById('app');
   let html = '';
   if(!state.role){
