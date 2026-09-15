@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workforce Strategy Simulation</title>
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --bg-color: #f8f9fa;
+        --text-main: #333333;
+        --border-color: #e0e0e0;
+    }
+
+    body {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text-main);
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 20px;
+    }
+
+    .sim-container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 40px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+
+    .disclaimer {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 15px;
+        border-left: 5px solid #ffeeba;
+        font-size: 0.9em;
+        margin-bottom: 30px;
+        font-style: italic;
+    }
+
+    .sim-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .sim-header h1 {
+        color: var(--primary-color);
+        font-size: 2.2em;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .sim-header p {
+        font-size: 1.1em;
+        color: var(--secondary-color);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .sim-section {
+        margin-bottom: 35px;
+    }
+
+    .sim-section h2 {
+        color: var(--primary-color);
+        font-size: 1.5em;
+        border-bottom: 1px solid var(--accent-color);
+        padding-bottom: 8px;
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+
+    .sim-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .sim-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .sim-card {
+        background: var(--bg-color);
+        padding: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+    }
+
+    .sim-card h3 {
+        color: var(--accent-color);
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.2em;
+    }
+
+    ul.sim-list, ol.sim-list {
+        padding-left: 20px;
+        margin-top: 10px;
+    }
+
+    .sim-list li {
+        margin-bottom: 12px;
+    }
+
+    .sim-list strong {
+        color: var(--secondary-color);
+    }
+
+    .scoring-criteria li {
+        background: var(--bg-color);
+        margin-bottom: 10px;
+        padding: 15px;
+        border-left: 4px solid var(--primary-color);
+        list-style-type: none;
+    }
+    
+    .scoring-criteria {
+        padding-left: 0;
+    }
+</style>
+</head>
+<body>
+
+<div class="sim-container">
+    
+    <div class="disclaimer">
+        <strong>Disclaimer:</strong> This game is a simulation. To streamline gameplay, numbers, operational situations, and calculations are abstractions and may differ from live real-world scenarios.
+    </div>
+
+    <header class="sim-header">
+        <h1>Workforce Strategy Simulation</h1>
+        <p>Welcome to your new role as the Human Resources Leadership Team. You are tasked with staffing and managing a brand-new woodchip-to-pulp fiberline that adds 1.5 million metric tons of annual capacity to our global operations. This landing page outlines the <strong>what</strong>, <strong>why</strong>, and <strong>how</strong> of your upcoming mission. Read carefully—your strategic decisions here will dictate the long-term success of the operation.</p>
+    </header>
+
+    <section class="sim-section">
+        <h2>THE WHAT: Your Mission</h2>
+        <p>You will manage the end-to-end employee lifecycle for this new facility. Your objective is to build a workforce capable of driving continuous improvement, delivering higher quality products, and maximizing productivity. You are not just filling seats; you are engineering a high-performing human system from the ground up.</p>
+    </section>
+
+    <section class="sim-section">
+        <h2>THE WHY: The Core Challenge</h2>
+        <p>The true test of organizational strategy is balancing <strong>today’s operational needs</strong> with <strong>tomorrow’s readiness</strong>. To succeed, you must solve two pressing industry bottlenecks:</p>
+        <div class="sim-grid">
+            <div class="sim-card">
+                <h3>The Geographic Challenge</h3>
+                <p>Our facilities are located near raw materials, away from urban centers. You must craft a compelling Employee Value Proposition (EVP) to attract young, diverse, global talent to our remote communities.</p>
+            </div>
+            <div class="sim-card">
+                <h3>The Succession Gap</h3>
+                <p>Our most experienced line supervisors are approaching retirement. You must actively manage knowledge transfer and strategically develop your younger talent to eventually take the helm.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="sim-section">
+        <h2>THE HOW: Simulation Mechanics</h2>
+        <p>The simulation unfolds over several cycles, with each cycle representing one quarter of operations. You will navigate three distinct phases:</p>
+        <ol class="sim-list">
+            <li><strong>Phase 1: The Pitch (EVP)</strong> - You will pitch your Employee Value Proposition to attract talent. Your score here will be multiplied to determine your starting budget of game coins.</li>
+            <li><strong>Phase 2: The Marketplace</strong> - Using your budget, you will enter a first-come, first-served draft to build a 5-person roster (1 Gold talent, 4 Silver talents).</li>
+            <li><strong>Phase 3: Core Operations</strong> - Quarter by quarter, you will deploy your roster across five critical fiberline areas (Chip Screening, Digester, Washing, Bleaching, and HDT). You will face dynamic quarterly updates, conduct Town Hall meetings, and adjust your strategy to maximize output and growth.</li>
+        </ol>
+    </section>
+
+    <section class="sim-section">
+        <h2>HOW TO WIN: The Scoring Criteria</h2>
+        <p>Your team's success will be measured across five dimensions (Total: 100 Points):</p>
+        <ul class="scoring-criteria">
+            <li><strong>Operational Performance (40 pts):</strong> Generate the highest operational output by placing the right talent in the right roles.</li>
+            <li><strong>Skill Growth (20 pts):</strong> Maximize employee skill increments by strategically placing talent outside their comfort zones to capitalize on steep learning curves.</li>
+            <li><strong>Talent Mobility (5 pts):</strong> Consistently rotate more than 50% of your workforce across different work areas throughout the simulation.</li>            
+	    <li><strong>Succession Planning (15 pts):</strong> Successfully develop your Silver talents into versatile leaders (reaching an attribute score over 75 in at least 4 different work areas) to replace retiring veterans.</li>
+            <li><strong>Complementary Team (20 pts):</strong> Judges will evaluate your real-world collaboration, dynamics, and decision-making as a team.</li>
+        </ul>
+    </section>
+
+</div>
+
+</body>
+</html>
