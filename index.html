@@ -6,9 +6,10 @@
 <title>Workforce Strategy Simulation — Control Deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics-compat.js"></script>
 <style>
 :root{
   --g-950:#10151A; --g-900:#171F25; --g-850:#1C252C; --g-800:#222C33; --g-750:#2A343C;
@@ -438,7 +439,7 @@ textarea{resize:vertical;min-height:120px;}
 /* =========================================================================
    WORKFORCE STRATEGY SIMULATION — CONTROL DECK
    Single-file SPA: state store + scoring engine + disruption engine +
-   phase controller + render layer. No frameworks, local persistence only.
+   phase controller + render layer. Firebase shared persistence with local fallback.
    ========================================================================= */
 
 const STORAGE_KEY = 'wfsim_state_v2';
@@ -446,15 +447,16 @@ const LOCAL_UI_KEY = 'wfsim_local_ui_v1';
 const LOCAL_DRAFT_KEY = 'wfsim_planning_drafts_v1';
 const SHARED_SESSION_ID = 'default';
 const TEAM_CODES = ['T1-ALPHA','T2-BRAVO','T3-CHARLIE','T4-DELTA','T5-ECHO','T6-FOXTROT','T7-GOLF','T8-HOTEL','T9-INDIA','T10-JULIET'];
-// Replace these values with the Firebase Web App config for the deployment.
+// Firebase Web App config for the Workforce Strategy Simulation deployment.
 const FIREBASE_CONFIG = {
-  apiKey: 'AIzaSyBw5cJ0oOccWngdScOgo1-cvsbyLncKuoA',
-  authDomain: 'workforce-strategy-sim.firebaseapp.com',
-  databaseURL: 'https://workforce-strategy-sim-default-rtdb.asia-southeast1.firebasedatabase.app',
-  projectId: 'workforce-strategy-sim',
-  storageBucket: 'workforce-strategy-sim.firebasestorage.app',
-  messagingSenderId: '761657063147',
-  appId: '1:761657063147:web:214381d762f177edbb30ae'
+  apiKey: 'AIzaSyAiq9Q8QI0DmQZ37mq70Q1LNpxnAqTHc5Q',
+  authDomain: 'workforce-strategy-simulation.firebaseapp.com',
+  databaseURL: 'https://workforce-strategy-simulation-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'workforce-strategy-simulation',
+  storageBucket: 'workforce-strategy-simulation.firebasestorage.app',
+  messagingSenderId: '170517675989',
+  appId: '1:170517675989:web:75379e3a30027eafc1075c',
+  measurementId: 'G-D543W6ZLGR'
 };
 const AREAS = ['A','B','C','D','E'];
 const AREA_NAMES = {A:'Chip Screening',B:'Digester',C:'Washing',D:'Bleaching',E:'HDT'};
