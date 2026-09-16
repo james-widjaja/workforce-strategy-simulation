@@ -1362,11 +1362,11 @@ function triggerDisruptionEvent(type, targetTeamId, targetTalentId){
       const currentRound = state.rounds[round-1];
       if(currentRound) currentRound.teamSubs[team.id] = false;
     });
-    state.events.unshift({id:uid('evt'), type, targetTeamId:null, targetTalentId:null, round,
+    state.events.unshift({id:uid('evt'), type, global:true, targetTeamId:null, targetTalentId:null, round,
       description:'Global Resignation: every active Gold talent was removed and automatically replaced with a Bronze talent.', status:'Triggered'});
     logAction('DisruptionTrigger', null, 'Global Resignation applied to all teams');
   } else {
-    state.events.unshift({id:uid('evt'), type, targetTeamId:null, targetTalentId:null, round,
+    state.events.unshift({id:uid('evt'), type, global:true, targetTeamId:null, targetTalentId:null, round,
       nominations:{}, description:'Global LEAP nomination window opened. Each team may nominate one active roster talent.', status:'Open'});
     logAction('DisruptionTrigger', null, 'Global LEAP nomination window opened for all teams');
   }
@@ -2351,8 +2351,12 @@ function renderOpsDashboard(team){
 }
 
 function renderEventCenter(team){
-  const myEvents = state.events.filter(e=>e.targetTeamId===team.id || e.targetTeamId===null);
-  const globalEvents = myEvents.filter(function(event){ return event.targetTeamId===null; });
+  const isGlobalEvent = function(event){
+    return event.global===true || event.targetTeamId===null || event.targetTeamId===undefined
+      || event.type==='Resignation' || event.type==='LEAP';
+  };
+  const myEvents = state.events.filter(function(event){ return isGlobalEvent(event) || event.targetTeamId===team.id; });
+  const globalEvents = myEvents.filter(isGlobalEvent);
   const leapEvent = state.events.find(function(event){
     return event.type==='LEAP' && event.round===state.session.currentRound && event.status==='Open';
   });
