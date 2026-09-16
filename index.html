@@ -1219,6 +1219,12 @@ function totalSkillGrowthForTeam(team){
     .reduce((sum,a)=>sum+(Number.isFinite(Number(a.totalIncrement)) ? Number(a.totalIncrement) : (Number(a.points)||0)),0);
 }
 
+function successorCountForTeam(team){
+  return teamRoster(team).filter(function(talent){
+    return talent.active && AREAS.filter(function(area){ return Number(talent.skills[area])>75; }).length>=4;
+  }).length;
+}
+
 function computeReadiness(team){
   const roster = teamRoster(team);
   if(roster.length===0) return 0;
@@ -1238,7 +1244,7 @@ function computeReadiness(team){
     previousRound.forEach(a=>{ previousByTalent[a.talentId] = a.area; });
     const rotated = currentRound.filter(a=>previousByTalent[a.talentId] && previousByTalent[a.talentId]!==a.area).length;
     if(previousRound.length && currentRound.length && rotated > roster.length/2) roundRotation = 5;
-    const successionReady = roster.filter(t=>t.tier==='Silver' && AREAS.filter(area=>t.skills[area]>75).length>3).length;
+    const successionReady = successorCountForTeam(team);
     const roundSuccession = successionReady>=3 ? 15 : successionReady===2 ? 10 : successionReady===1 ? 5 : 0;
     history.push({
       round:round.number,
@@ -1251,7 +1257,7 @@ function computeReadiness(team){
   const transitionHistory = history.filter(entry=>entry.round>1);
   const rotationQualified = transitionHistory.length>0 && transitionHistory.every(entry=>entry.rotationBonus===5);
   rotation = rotationQualified ? 5 : 0;
-  const finalSuccessionReady = roster.filter(t=>t.tier==='Silver' && AREAS.filter(area=>t.skills[area]>75).length>3).length;
+  const finalSuccessionReady = successorCountForTeam(team);
   const succession = finalSuccessionReady>=3 ? 15 : finalSuccessionReady===2 ? 10 : finalSuccessionReady===1 ? 5 : 0;
   const breakdown = {growth:Math.round(growth), rotation, succession};
   team.readinessHistory = history;
@@ -2251,7 +2257,7 @@ function renderCompanyProfile(){
         +'<li><strong>Operational Performance (40 pts):</strong> Generate the highest operational output by placing the right talent in the right roles.</li>'
         +'<li><strong>Skill Growth (20 pts):</strong> Maximize employee skill increments by strategically placing talent outside their comfort zones to capitalize on steep learning curves.</li>'
         +'<li><strong>Talent Mobility (5 pts):</strong> Consistently rotate more than 50% of your workforce across different work areas throughout the simulation.</li>'
-        +'<li><strong>Succession Planning (15 pts):</strong> Successfully develop your Silver talents into versatile leaders (reaching an attribute score over 75 in at least 4 different work areas) to replace retiring veterans.</li>'
+        +'<li><strong>Succession Planning (15 pts):</strong> Successfully develop any active talent into a versatile leader (reaching an attribute score over 75 in at least 4 different work areas) to replace retiring veterans.</li>'
         +'<li><strong>Complementary Team (20 pts):</strong> Judges will evaluate your real-world collaboration, dynamics, and decision-making as a team.</li>'
       +'</ul>'
     +'</section>'
@@ -2424,7 +2430,7 @@ function renderOpsDashboard(team){
       +'<div class="panel"><div class="panel-head"><h3>Operational + Multiplier</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+team.operational+'</div><div class="dim small">cumulative score after folding multipliers</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Skill Growth</h3></div><div class="mono" style="font-size:26px;font-weight:700;">+'+skillGrowth+'</div><div class="dim small">total development increment</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Talent Mobility</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+talentMobility+'</div><div class="dim small">goal: rotate at least '+(Math.floor(teamRoster(team).length/2)+1)+' of '+teamRoster(team).length+' talents between consecutive rounds</div></div>'
-      +'<div class="panel"><div class="panel-head"><h3>Successor Identified?</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+latestSuccession+'</div><div class="dim small">goal: Silver talent with skill &gt;75 in 4+ areas · 1=+5, 2=+10, 3+=+15</div></div>'
+      +'<div class="panel"><div class="panel-head"><h3>Successor Identified?</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+latestSuccession+'</div><div class="dim small">goal: Any active talent with skill &gt;75 in 4+ areas · 1=+5, 2=+10, 3+=+15</div></div>'
     +'</div>'+foldingPanel
     +'<div class="panel"><div class="panel-head"><h3>Round Results</h3></div>'
     +(scored.length ? '<table><thead><tr><th>Round</th><th>Operational</th><th>Trees</th><th>Multiplier</th><th>Operational + Multiplier</th></tr></thead><tbody>'
@@ -2460,18 +2466,9 @@ function talentSkillBeforeRound(team, talent, area, roundNumber){
 }
 
 function talentDevelopmentIncrementForRound(team, talent, area, roundNumber){
-  let increment = state.assignments.filter(function(assignment){
-    return assignment.teamId===team.id && assignment.talentId===talent.id
-      && assignment.area===area && assignment.round===roundNumber;
-  }).reduce(function(sum, assignment){
-    return sum + (Number.isFinite(Number(assignment.totalIncrement)) ? Number(assignment.totalIncrement) : (Number(assignment.points)||0));
-  }, 0);
-  state.events.filter(function(event){ return event.type==='LEAP' && event.round===roundNumber; }).forEach(function(event){
-    const nominatedId = event.nominations && event.nominations[team.id];
-    const applies = nominatedId===talent.id || (event.targetTeamId===team.id && event.targetTalentId===talent.id);
-    if(applies) increment += Number(state.session.leapSkillIncrement)||0;
-  });
-  return increment;
+  const starting = talentSkillBeforeRound(team, talent, area, roundNumber);
+  const ending = talentSkillAfterRound(team, talent, area, roundNumber);
+  return Math.max(0, ending - starting);
 }
 
 function talentIdsForDevelopmentRound(team, roundNumber){
