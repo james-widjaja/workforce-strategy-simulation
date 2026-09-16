@@ -2431,10 +2431,83 @@ function renderOpsDashboard(team){
       +scored.map(r=>'<tr><td>Round '+r.number+'</td><td class="mono">'+(r.treeResults[team.id]?r.treeResults[team.id].base:'—')+'</td><td class="mono">'+(r.treeResults[team.id]?r.treeResults[team.id].trees:'—')+'</td><td class="mono">'+(r.treeResults[team.id]?'×'+r.treeResults[team.id].multiplier:'—')+'</td><td class="mono">'+(r.results[team.id]!==undefined?r.results[team.id]:'—')+'</td></tr>').join('')
       +'</tbody></table>' : '<p class="dim small">No rounds scored yet.</p>')
     +'</div>'
-    +'<div class="panel"><div class="panel-head"><h3>Talent Development</h3><span class="hint">Current skill vs original baseline</span></div><p class="dim small" style="margin-bottom:12px;">Each value shows the original attribute, current attribute, and the increment gained through development.</p><div class="table-wrap"><table><thead><tr><th>Talent</th><th>Tier</th>'+AREAS.map(a=>'<th>'+a+' · '+AREA_NAMES[a]+'</th>').join('')+'</tr></thead><tbody>'
-    +teamRoster(team).map(t=>'<tr><td>'+esc(t.name)+(t.active?'':' <span class="badge badge-danger">inactive</span>')+'</td><td><span class="badge '+(t.tier==='Gold'?'badge-gold':t.tier==='Silver'?'badge-silver':'badge-bronze')+'">'+t.tier+'</span></td>'+AREAS.map(a=>{ const original=Number(t.originalSkills&&t.originalSkills[a]!==undefined?t.originalSkills[a]:t.skills[a])||0; const current=Number(t.skills[a])||0; const increment=current-original; return '<td><span class="mono">'+original+' → '+current+'</span> <strong style="color:'+(increment>0?'var(--green)':'var(--text-3)')+';">('+(increment>=0?'+':'')+increment+')</strong></td>'; }).join('')+'</tr>').join('')
-    +'</tbody></table></div></div></div>';
+    +renderTalentDevelopmentHistory(team)+'</div>';
+}
+
+function talentSkillAfterRound(team, talent, area, roundNumber){
+  const baseline = Number(talent.originalSkills && talent.originalSkills[area]);
+  let skill = Number.isFinite(baseline) ? baseline : Number(talent.skills[area])||0;
+  state.assignments.filter(function(assignment){
+    return assignment.teamId===team.id && assignment.talentId===talent.id
+      && assignment.area===area && assignment.round<=roundNumber;
+  }).forEach(function(assignment){
+    skill += Number.isFinite(Number(assignment.totalIncrement)) ? Number(assignment.totalIncrement) : (Number(assignment.points)||0);
+  });
+  state.events.filter(function(event){ return event.type==='LEAP' && event.round<=roundNumber; }).forEach(function(event){
+    const nominatedId = event.nominations && event.nominations[team.id];
+    const applies = nominatedId===talent.id || (event.targetTeamId===team.id && event.targetTalentId===talent.id);
+    if(applies) skill += Number(state.session.leapSkillIncrement)||0;
+  });
+  return Math.max(0, Math.min(100, Math.round(skill)));
+}
+
+function talentSkillBeforeRound(team, talent, area, roundNumber){
+  if(roundNumber<=1){
+    const baseline = Number(talent.originalSkills && talent.originalSkills[area]);
+    return Math.max(0, Math.min(100, Math.round(Number.isFinite(baseline) ? baseline : Number(talent.skills[area])||0)));
+  }
+  return talentSkillAfterRound(team, talent, area, roundNumber-1);
+}
+
+function talentDevelopmentIncrementForRound(team, talent, area, roundNumber){
+  let increment = state.assignments.filter(function(assignment){
+    return assignment.teamId===team.id && assignment.talentId===talent.id
+      && assignment.area===area && assignment.round===roundNumber;
+  }).reduce(function(sum, assignment){
+    return sum + (Number.isFinite(Number(assignment.totalIncrement)) ? Number(assignment.totalIncrement) : (Number(assignment.points)||0));
+  }, 0);
+  state.events.filter(function(event){ return event.type==='LEAP' && event.round===roundNumber; }).forEach(function(event){
+    const nominatedId = event.nominations && event.nominations[team.id];
+    const applies = nominatedId===talent.id || (event.targetTeamId===team.id && event.targetTalentId===talent.id);
+    if(applies) increment += Number(state.session.leapSkillIncrement)||0;
+  });
+  return increment;
+}
+
+function talentIdsForDevelopmentRound(team, roundNumber){
+  const ids = new Set();
+  state.assignments.forEach(function(assignment){
+    if(assignment.teamId===team.id && assignment.round<=roundNumber) ids.add(assignment.talentId);
+  });
+  if(roundNumber===state.session.currentRound) team.roster.forEach(function(talentId){ ids.add(talentId); });
+  return Array.from(ids).map(function(id){ return state.talents.find(function(talent){ return talent.id===id; }); }).filter(Boolean);
+}
+
+function renderTalentDevelopmentTable(team, roundNumber){
+  const talents = talentIdsForDevelopmentRound(team, roundNumber);
+  return '<div class="panel"><div class="panel-head"><h3>Round '+roundNumber+' Talent Development</h3><span class="hint">Post-development attributes</span></div>'
+    +'<p class="dim small" style="margin-bottom:12px;">Each value shows the skill at the start of the round, the post-development skill, and this round&rsquo;s increment. The next round starts from these ending values.</p><div class="table-wrap"><table><thead><tr><th>Talent</th><th>Tier</th>'
+    +AREAS.map(function(area){ return '<th>'+area+' · '+AREA_NAMES[area]+'</th>'; }).join('')+'</tr></thead><tbody>'
+    +talents.map(function(talent){
+      return '<tr><td>'+esc(talent.name)+(talent.active?'':' <span class="badge badge-danger">inactive</span>')+'</td><td><span class="badge '+(talent.tier==='Gold'?'badge-gold':talent.tier==='Silver'?'badge-silver':'badge-bronze')+'">'+talent.tier+'</span></td>'
+        +AREAS.map(function(area){
+          const starting = talentSkillBeforeRound(team, talent, area, roundNumber);
+          const increment = talentDevelopmentIncrementForRound(team, talent, area, roundNumber);
+          const ending = Math.max(0, Math.min(100, Math.round(starting + increment)));
+          const incrementClass = increment>0 ? '' : ' dim';
+          const incrementStyle = increment>0 ? ' style="color:var(--green);font-weight:700;"' : '';
+          return '<td class="mono">'+starting+' &rarr; '+ending+' <span class="'+incrementClass.trim()+'"'+incrementStyle+'>(+'+increment+')</span></td>';
+        }).join('')+'</tr>';
+    }).join('')
     +'</tbody></table></div></div>';
+}
+
+function renderTalentDevelopmentHistory(team){
+  const lastRound = Math.min(state.session.currentRound, state.rounds.length);
+  if(lastRound<1) return '<div class="panel"><div class="panel-head"><h3>Talent Development</h3></div><p class="dim small">Development history becomes available when Round 1 opens.</p></div>';
+  return '<div class="stack"><div class="panel"><div class="panel-head"><h3>Talent Development History</h3><span class="hint">Round-by-round record</span></div><p class="dim small">Each table preserves the post-development skills for that round. Future rounds use the previous table&rsquo;s values as their starting point.</p></div>'
+    +Array.from({length:lastRound}, function(_, index){ return renderTalentDevelopmentTable(team, index+1); }).join('')
+    +'</div>';
 }
 
 function renderEventCenter(team){
