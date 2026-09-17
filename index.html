@@ -2287,7 +2287,7 @@ function renderSimulationRoadmap(team){
     +'<p class="dim small">Follow the phases from left to right. Green means complete, amber is your current focus, and grey is coming next.</p>'
     +'<div class="simulation-roadmap">'
       +phase(1,'EVP Craft & Presentation','Use the company profile, values, and philosophy to craft and share your strategy for evaluation.',evpDone?'done':evpCurrent?'current':'',''+(evpDone?'Completed':evpCurrent?'In progress':'Upcoming'))
-      +phase(2,'The Marketplace','Use your budget to build a 5-person roster, with Bronze talents available as a no-cost fallback.',recruitmentDone?'done':recruitmentCurrent?'current':'',recruitmentDone?'Completed':recruitmentCurrent?'In progress':'Upcoming')
+      +phase(2,'The Marketplace','Use your budget to build a 5-person roster with the available talents in the marketplace.',recruitmentDone?'done':recruitmentCurrent?'current':'',recruitmentDone?'Completed':recruitmentCurrent?'In progress':'Upcoming')
       +phase(3,'Core Operations','Place talent, develop skills, rotate roles, and complete each quarterly round.',operationsDone?'done':operationsCurrent?'current':'',operationsDone?'Completed':operationsCurrent?'Round '+state.session.currentRound+' of '+state.rounds.length:'Upcoming','<div class="roadmap-round-progress">'+roundProgress+'</div>')
       +phase(4,'Results & Leaderboard','The facilitator completes the metrics and rubrics, then publishes the results.',scoringDone?'done':scoringCurrent?'current':'',scoringDone?'Published':scoringCurrent?'Awaiting facilitator':'Upcoming')
     +'</div></div>';
@@ -2329,7 +2329,7 @@ function renderMarketplace(team){
   const roster = teamRoster(team);
   const rosterProgress = Math.min(100, Math.round(roster.length/5*100));
   const marketplaceSummary = '<div class="marketplace-summary">'
-    +'<div class="marketplace-summary-copy"><h3>Roster Progress</h3><p>Target: 5 talents · Bronze is a no-cost fallback · '+(roster.length>=5?'Roster complete':'Recruit '+(5-roster.length)+' more talent'+(5-roster.length===1?'':'s'))+'</p></div>'
+    +'<div class="marketplace-summary-copy"><h3>Roster Progress</h3><p>Target: 5 talents, 1 gold talent and 4 silver talents · Not enough coins? Bronze talents are a no-cost fallback · '+(roster.length>=5?'Roster complete':'Recruit '+(5-roster.length)+' more talent'+(5-roster.length===1?'':'s'))+'</p></div>'
     +'<div class="marketplace-progress"><div class="marketplace-progress-track"><div class="marketplace-progress-fill" style="width:'+rosterProgress+'%;"></div></div><div class="marketplace-progress-value">'+roster.length+'/5</div></div>'
     +'</div>';
   if(state.phaseStatus.marketplace==='locked'){
