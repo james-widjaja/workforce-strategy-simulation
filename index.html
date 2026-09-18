@@ -574,7 +574,7 @@ const FIREBASE_CONFIG = {
 };
 const AREAS = ['A','B','C','D','E'];
 const AREA_NAMES = {A:'Chip Screening',B:'Digester',C:'Washing',D:'Bleaching',E:'HDT'};
-const FACILITATOR_KEY = 'FACILITATOR';
+const FACILITATOR_KEY = 'ADMIN';
 
 /* ---------------------------- deterministic RNG ---------------------------- */
 function mulberry32(seed){
@@ -680,7 +680,7 @@ function freshState(numTeams, playersPerTeam, numRounds){
   const teams = buildTeams(numTeams);
   const rounds = [];
   for(let r=1;r<=numRounds;r++){
-    rounds.push({ number:r, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null} });
+    rounds.push({ number:r, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null, minutes:10} });
   }
   return {
     session:{ name:'Workforce Strategy Simulation', numRounds, evpMultiplier:3, numJudges:3, skillGrowthBenchmark:800, leapSkillIncrement:15, currentRound:0, numTeams, playersPerTeam },
@@ -791,6 +791,10 @@ function normalizeTeamCodes(sessionState){
     });
   }
   sessionState.rounds = Array.isArray(sessionState.rounds) ? sessionState.rounds : Object.keys(sessionState.rounds || {}).map(function(key){ return sessionState.rounds[key]; });
+  sessionState.rounds.forEach(function(round){
+    round.folding = Object.assign({status:'locked', endsAt:null, minutes:sessionState.foldingControl.minutes}, round.folding || {});
+    round.folding.minutes = Math.max(1, Math.min(60, parseInt(round.folding.minutes,10)||sessionState.foldingControl.minutes));
+  });
   sessionState.assignments = Array.isArray(sessionState.assignments) ? sessionState.assignments : Object.keys(sessionState.assignments || {}).map(function(key){ return sessionState.assignments[key]; });
   sessionState.events = Array.isArray(sessionState.events) ? sessionState.events : Object.keys(sessionState.events || {}).map(function(key){ return sessionState.events[key]; });
   sessionState.session.skillGrowthBenchmark = Number.isFinite(Number(sessionState.session.skillGrowthBenchmark))
@@ -943,6 +947,12 @@ function foldingControl(){
     state.foldingControl = { minutes:10, budget:16, underTargetMax:9, targetMin:14, targetMax:16, overachieveMax:20, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 };
   }
   return state.foldingControl;
+}
+function roundFoldingMinutes(round){
+  const fallback = foldingControl().minutes;
+  return round && round.folding && Number.isFinite(Number(round.folding.minutes))
+    ? Math.max(1, Math.min(60, Number(round.folding.minutes)))
+    : fallback;
 }
 function formatTimer(ms){
   const seconds = Math.max(0, Math.ceil(ms/1000));
@@ -1168,14 +1178,27 @@ function setFoldingSetting(field, value){
   else c[field] = Math.max(0, Number(value)||0);
   persistAndRender();
 }
+function setRoundFoldingMinutes(roundNumber, value){
+  const round = state.rounds[roundNumber-1];
+  if(!round || !round.folding) return;
+  if(round.folding.status==='running'){
+    toast('Stop the active folding timer before changing its duration.', 'warn');
+    render();
+    return;
+  }
+  round.folding.minutes = Math.max(1, Math.min(60, parseInt(value,10)||roundFoldingMinutes(round)));
+  persistAndRender();
+}
 function startFoldingRound(){
   const round = state.rounds[state.session.currentRound-1];
   if(!round || round.status!=='open') return;
   const locked = state.teams.filter(t=>round.teamSubs[t.id]).length;
   if(locked < state.teams.length){ toast('All team assignments must be locked before folding starts.', 'warn'); return; }
   round.folding.status = 'running';
-  round.folding.endsAt = new Date(Date.now()+foldingControl().minutes*60000).toISOString();
-  logAction('TimerStart', null, 'Origami tree folding started for Round '+round.number+' ('+foldingControl().minutes+' minutes)');
+  const minutes = roundFoldingMinutes(round);
+  round.folding.minutes = minutes;
+  round.folding.endsAt = new Date(Date.now()+minutes*60000).toISOString();
+  logAction('TimerStart', null, 'Origami tree folding started for Round '+round.number+' ('+minutes+' minutes)');
   persistAndRender();
 }
 function endFoldingRound(){
@@ -2169,7 +2192,6 @@ function renderLogin(){
   } else if(mode==='facilitator'){
     body = '<div class="field"><label>Facilitator Key</label><input type="password" id="facKeyInput" placeholder="Facilitator key" autofocus></div>'
       +'<button class="btn btn-amber btn-block" onclick="loginAsFacilitator(document.getElementById(\'facKeyInput\').value)">Open Admin Console</button>'
-      +'<div class="dimmer small" style="margin-top:8px;">Demo key: FACILITATOR</div>'
       +'<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="setLoginMode(null)">← Back</button></div>';
   } else {
     body = '<button class="btn btn-amber btn-block" style="padding:14px;margin-bottom:10px;" onclick="setLoginMode(\'team\')">Team Login</button>'
@@ -2691,9 +2713,9 @@ function renderAdminTeams(){
     +'<button class="btn btn-cyan" onclick="seedSixTeamRehearsal()">Load Six-Team Rehearsal</button>'
     +'<button class="btn btn-green" style="margin-left:8px;" onclick="seedSixTeamThroughRound2()">Load Through Round 2</button>'
     +'<button class="btn btn-amber" style="margin-left:8px;" onclick="seedSixTeamFullRehearsal()">Load Full 8-Round Session</button></div>'
-    +'<div class="panel"><div class="panel-head"><h3>Origami Tree Challenge Settings</h3><span class="hint">Applied to every round</span></div>'
+    +'<div class="panel"><div class="panel-head"><h3>Origami Tree Challenge Settings</h3><span class="hint">Used as the default for new rounds</span></div>'
     +'<div class="grid grid-3">'
-    +'<div class="field"><label>Folding time (minutes)</label><input type="number" min="1" max="60" value="'+foldingControl().minutes+'" onchange="setFoldingSetting(\'minutes\',this.value)"></div>'
+    +'<div class="field"><label>Default folding time (minutes)</label><input type="number" min="1" max="60" value="'+foldingControl().minutes+'" onchange="setFoldingSetting(\'minutes\',this.value)"></div>'
     +'<div class="field"><label>Tree budget</label><input type="number" min="0" value="'+foldingControl().budget+'" onchange="setFoldingSetting(\'budget\',this.value)"></div>'
     +'<div class="field"><label>Below-target max trees</label><input type="number" min="0" value="'+foldingControl().underTargetMax+'" onchange="setFoldingSetting(\'underTargetMax\',this.value)"></div>'
     +'<div class="field"><label>Budget achieved minimum</label><input type="number" min="0" value="'+foldingControl().targetMin+'" onchange="setFoldingSetting(\'targetMin\',this.value)"></div>'
@@ -2716,7 +2738,7 @@ function updateSessionRounds(value){
     return;
   }
   state.session.numRounds = numRounds;
-  state.rounds = Array.from({length:numRounds}, (_,i)=>({ number:i+1, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null} }));
+  state.rounds = Array.from({length:numRounds}, (_,i)=>({ number:i+1, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null, minutes:foldingControl().minutes} }));
   persistAndRender();
 }
 
@@ -2781,6 +2803,7 @@ function renderAdminPhases(){
         +'<div class="round-flow-step '+(foldingDone?'done':r.folding.status==='running'?'active':'')+'"><span class="step-number">2</span><span>Tree folding<br><strong>'+(!foldingDone&&r.folding.status==='running'?'In progress':foldingDone?'Complete':'Waiting')+'</strong></span></div>'
         +'<div class="round-flow-step '+(allSubmitted?'done':foldingDone?'active':'')+'"><span class="step-number">3</span><span>Record results<br><strong>'+submitted+'/'+state.teams.length+' submitted</strong></span></div>'
         +'</div>';
+      html += '<div class="field" style="max-width:260px;margin-top:12px;"><label>Round '+r.number+' folding time (minutes)</label><input type="number" min="1" max="60" value="'+roundFoldingMinutes(r)+'" '+(r.folding.status==='running' || r.status==='scored'?'disabled':'')+' onchange="setRoundFoldingMinutes('+r.number+',this.value)"></div>';
       if(isCurrent && r.status==='open'){
           if(r.folding.status!=='locked'){
             html += '<div class="panel tree-entry-panel"><div class="panel-head"><h3>Record folded trees</h3><span class="badge '+(allSubmitted?'badge-open':'badge-warn')+'">'+submitted+'/'+state.teams.length+' complete</span></div>'
@@ -2790,7 +2813,7 @@ function renderAdminPhases(){
               +'</div><div class="tree-entry-footer"><span class="dim small">'+(allSubmitted?'All teams are ready for scoring.':'Complete every team before scoring.')+'</span><span class="mono small">'+submitted+'/'+state.teams.length+'</span></div></div>';
           }
          if(r.folding.status==='locked'){
-          html += '<button class="btn btn-cyan" '+(locked<state.teams.length?'disabled':'')+' onclick="startFoldingRound()">Start '+foldingControl().minutes+'-Minute Tree Folding</button>';
+          html += '<button class="btn btn-cyan" '+(locked<state.teams.length?'disabled':'')+' onclick="startFoldingRound()">Start '+roundFoldingMinutes(r)+'-Minute Tree Folding</button>';
         } else if(r.folding.status==='running'){
           html += '<div class="row"><div class="timer-box warn"><div class="label">Folding remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(r.folding.endsAt))+'</div></div><button class="btn btn-red" onclick="endFoldingRound()">End Folding Early</button></div>';
         } else {
