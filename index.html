@@ -573,7 +573,7 @@ const FIREBASE_CONFIG = {
   measurementId: 'G-D543W6ZLGR'
 };
 const AREAS = ['A','B','C','D','E'];
-const AREA_NAMES = {A:'Chip Screening',B:'Digester',C:'Washing',D:'Bleaching',E:'HDT'};
+const AREA_NAMES = {A:'FFB Grading',B:'Sterilization',C:'Threshing',D:'Pressing',E:'Clarification'};
 const FACILITATOR_KEY = 'ADMIN';
 
 /* ---------------------------- deterministic RNG ---------------------------- */
@@ -648,14 +648,14 @@ const MIN_ROUNDS = 1, MAX_ROUNDS = 10;
 const MIN_JUDGES = 1, MAX_JUDGES = 5;
 const EVP_CRITERIA = [
   {key:'clarity', label:'Clarity, Structure, Realism & Feasibility', description:'Well articulated, clearly structured, easy to understand, and realistic within team resource and budget constraints.'},
-  {key:'businessAlignment', label:'Alignment with Business Needs', description:'Reflects the workforce strategy and operational needs of the new fiberline.'},
+  {key:'businessAlignment', label:'Alignment with Business Needs', description:'Reflects the workforce strategy and operational needs of the new palm oil mill.'},
   {key:'attraction', label:'Talent Attraction Potential', description:'Compelling, competitive, and likely to attract high-quality talent.'},
   {key:'development', label:'Development Opportunities & Retention Focus', description:'Includes career growth, learning or development, and retention through growth, reward, or culture.'},
   {key:'submission', label:'EVP Strategy Quality', description:'The EVP strategy is clear, compelling, realistic, and grounded in the company profile, values, and philosophy.'}
 ];
 function clampTeamCount(n){ return Math.max(MIN_TEAMS, Math.min(MAX_TEAMS, parseInt(n,10) || MIN_TEAMS)); }
 function clampPlayersPerTeam(n){ return Math.max(MIN_PLAYERS_PER_TEAM, Math.min(MAX_PLAYERS_PER_TEAM, parseInt(n,10) || 1)); }
-function clampRoundCount(n){ return Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, parseInt(n,10) || 4)); }
+function clampRoundCount(n){ return Math.max(MIN_ROUNDS, Math.min(MAX_ROUNDS, parseInt(n,10) || 5)); }
 function clampJudgeCount(n){ return Math.max(MIN_JUDGES, Math.min(MAX_JUDGES, parseInt(n,10) || MIN_JUDGES)); }
 
 function buildTeams(n){
@@ -675,17 +675,17 @@ function freshState(numTeams, playersPerTeam, numRounds){
   rng = mulberry32(20260701);
   numTeams = clampTeamCount(numTeams===undefined?8:numTeams);
   playersPerTeam = clampPlayersPerTeam(playersPerTeam===undefined?6:playersPerTeam);
-  numRounds = clampRoundCount(numRounds===undefined?4:numRounds);
+  numRounds = clampRoundCount(numRounds===undefined?5:numRounds);
   const talents = buildTalentPool();
   const teams = buildTeams(numTeams);
   const rounds = [];
   for(let r=1;r<=numRounds;r++){
-    rounds.push({ number:r, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null, minutes:10} });
+    rounds.push({ number:r, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null, minutes:2} });
   }
   return {
     session:{ name:'Workforce Strategy Simulation', numRounds, evpMultiplier:3, numJudges:3, skillGrowthBenchmark:800, leapSkillIncrement:15, currentRound:0, numTeams, playersPerTeam },
     evpControl:{ draftMinutes:20, presentationMinutes:3, planningMinutes:5, draftStatus:'idle', draftEndsAt:null, presentationOrder:[], presentationIndex:0, presentationStatus:'idle', presentationEndsAt:null, planningStatus:'idle', planningEndsAt:null, dartRound:{status:'locked',throws:{}} },
-    foldingControl:{ minutes:10, budget:16, underTargetMax:9, targetMin:14, targetMax:16, overachieveMax:20, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 },
+    foldingControl:{ minutes:2, budget:90, underTargetMax:60, targetMin:70, targetMax:90, overachieveMax:120, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 },
     role: null, // {type:'facilitator'} | {type:'team', teamId, access:'leader'|'viewer'}
     teamAccess:{},
     ui:{ route:'login', teamTab:'company-profile', adminTab:'teams', loginMode:null, selectedEventTeam:'', selectedEventType:'Resignation', selectedEventTalent:'', theme:'light' },
@@ -760,16 +760,56 @@ function normalizeTeamCodes(sessionState){
   sessionState.evpControl.dartRound = Object.assign({status:stateSafeDartStatus(sessionState),throws:{}}, sessionState.evpControl.dartRound || {});
   sessionState.evpControl.dartRound.throws = sessionState.evpControl.dartRound.throws || {};
   sessionState.foldingControl = Object.assign(freshState().foldingControl, sessionState.foldingControl || {});
-  sessionState.foldingControl.minutes = Math.max(1, Math.min(60, parseInt(sessionState.foldingControl.minutes,10)||10));
-  sessionState.foldingControl.budget = Math.max(0, parseInt(sessionState.foldingControl.budget,10)||16);
-  sessionState.foldingControl.underTargetMax = Math.max(0, parseInt(sessionState.foldingControl.underTargetMax,10)||9);
-  sessionState.foldingControl.targetMin = Math.max(0, parseInt(sessionState.foldingControl.targetMin,10)||14);
-  sessionState.foldingControl.targetMax = Math.max(sessionState.foldingControl.targetMin, parseInt(sessionState.foldingControl.targetMax,10)||16);
-  sessionState.foldingControl.overachieveMax = Math.max(sessionState.foldingControl.targetMax, parseInt(sessionState.foldingControl.overachieveMax,10)||20);
+  sessionState.foldingControl.minutes = Math.max(1, Math.min(60, parseInt(sessionState.foldingControl.minutes,10)||2));
+  sessionState.foldingControl.budget = Math.max(0, parseInt(sessionState.foldingControl.budget,10)||90);
+  sessionState.foldingControl.underTargetMax = Math.max(0, parseInt(sessionState.foldingControl.underTargetMax,10)||60);
+  sessionState.foldingControl.targetMin = Math.max(0, parseInt(sessionState.foldingControl.targetMin,10)||70);
+  sessionState.foldingControl.targetMax = Math.max(sessionState.foldingControl.targetMin, parseInt(sessionState.foldingControl.targetMax,10)||90);
+  sessionState.foldingControl.overachieveMax = Math.max(sessionState.foldingControl.targetMax, parseInt(sessionState.foldingControl.overachieveMax,10)||120);
   ['belowMultiplier','neutralMultiplier','targetMultiplier','overachieveMultiplier','exceedMultiplier'].forEach(function(key){
     const value = Number(sessionState.foldingControl[key]);
     sessionState.foldingControl[key] = Number.isFinite(value) && value >= 0 ? value : freshState().foldingControl[key];
   });
+  const untouchedLegacyRounds = sessionState.session.currentRound===0
+    && sessionState.session.numRounds===4
+    && sessionState.rounds && sessionState.rounds.length===4
+    && sessionState.rounds.every(function(round){ return round.status==='locked'; });
+  if(untouchedLegacyRounds){
+    sessionState.session.numRounds = 5;
+    sessionState.rounds = Array.from({length:5}, function(_, index){
+      return { number:index+1, status:'locked', teamSubs:{}, results:{}, treeResults:{}, treeSubs:{}, bonus:{}, folding:{status:'locked', endsAt:null, minutes:2} };
+    });
+  }
+  const untouchedLegacyRecoveryDefaults = sessionState.session.currentRound===0
+    && sessionState.foldingControl.minutes===10
+    && sessionState.foldingControl.budget===16
+    && sessionState.foldingControl.underTargetMax===9
+    && sessionState.foldingControl.targetMin===14
+    && sessionState.foldingControl.targetMax===16
+    && sessionState.foldingControl.overachieveMax===20;
+  if(untouchedLegacyRecoveryDefaults){
+    sessionState.foldingControl.minutes = 2;
+    sessionState.foldingControl.budget = 90;
+    sessionState.foldingControl.underTargetMax = 60;
+    sessionState.foldingControl.targetMin = 70;
+    sessionState.foldingControl.targetMax = 90;
+    sessionState.foldingControl.overachieveMax = 120;
+  }
+  if(sessionState.foldingControl.budget===90
+    && sessionState.foldingControl.underTargetMax===59
+    && sessionState.foldingControl.targetMin===71
+    && sessionState.foldingControl.targetMax===90
+    && sessionState.foldingControl.overachieveMax===120){
+    sessionState.foldingControl.underTargetMax = 60;
+    sessionState.foldingControl.targetMin = 70;
+  }
+  if(sessionState.foldingControl.budget===90
+    && sessionState.foldingControl.underTargetMax===60
+    && sessionState.foldingControl.targetMin===71
+    && sessionState.foldingControl.targetMax===90
+    && sessionState.foldingControl.overachieveMax===120){
+    sessionState.foldingControl.targetMin = 70;
+  }
   sessionState.evpControl.presentationMinutes = Math.max(1, Math.min(10, parseInt(sessionState.evpControl.presentationMinutes,10)||3));
   sessionState.evpControl.planningMinutes = Math.max(1, Math.min(30, parseInt(sessionState.evpControl.planningMinutes,10)||5));
   sessionState.evpControl.presentationOrder = Array.isArray(sessionState.evpControl.presentationOrder)
@@ -944,7 +984,7 @@ function evpControl(){
 }
 function foldingControl(){
   if(!state.foldingControl){
-    state.foldingControl = { minutes:10, budget:16, underTargetMax:9, targetMin:14, targetMax:16, overachieveMax:20, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 };
+    state.foldingControl = { minutes:2, budget:90, underTargetMax:60, targetMin:70, targetMax:90, overachieveMax:120, belowMultiplier:0.9, neutralMultiplier:1, targetMultiplier:1.1, overachieveMultiplier:1.2, exceedMultiplier:1.3 };
   }
   return state.foldingControl;
 }
@@ -987,7 +1027,7 @@ function liveTimerTick(){
     const remaining = timerRemaining(round.folding.endsAt);
     const display = document.getElementById('foldingTimer');
     if(display) display.textContent = formatTimer(remaining);
-    if(remaining===0){ round.folding.status='ended'; round.folding.endsAt=null; changed=true; toast('Origami tree folding time is up.', 'warn'); }
+    if(remaining===0){ round.folding.status='ended'; round.folding.endsAt=null; changed=true; toast('Loose-fruit recovery time is up.', 'warn'); }
   }
   if(changed) persistAndRender();
 }
@@ -1150,7 +1190,7 @@ function computeOperationalForRound(team, round){
 
 function treeMultiplier(count){
   const c = foldingControl();
-  if(count <= c.underTargetMax) return c.belowMultiplier;
+  if(count < c.underTargetMax) return c.belowMultiplier;
   if(count < c.targetMin) return c.neutralMultiplier;
   if(count <= c.targetMax) return c.targetMultiplier;
   if(count <= c.overachieveMax) return c.overachieveMultiplier;
@@ -1158,21 +1198,21 @@ function treeMultiplier(count){
 }
 function treeBandLabel(count){
   const c = foldingControl();
-  if(count <= c.underTargetMax) return 'Below target';
-  if(count < c.targetMin) return 'Neutral';
-  if(count <= c.targetMax) return 'Budget achieved';
-  if(count <= c.overachieveMax) return 'Overachieved';
-  return 'Exceeded';
+  if(count < c.underTargetMax) return 'Below target';
+  if(count < c.targetMin) return 'Can improve';
+  if(count <= c.targetMax) return 'Achieve budget';
+  if(count <= c.overachieveMax) return 'Overachieve';
+  return 'Excellent';
 }
 function setFoldingSetting(field, value){
   const c = foldingControl();
-  if(field==='minutes') c.minutes = Math.max(1, Math.min(60, parseInt(value,10)||10));
+  if(field==='minutes') c.minutes = Math.max(1, Math.min(60, parseInt(value,10)||2));
   else if(field==='budget'){
     c.budget = Math.max(0, parseInt(value,10)||0);
-    c.underTargetMax = Math.max(0, c.budget-7);
-    c.targetMin = Math.max(0, c.budget-2);
+    c.underTargetMax = Math.max(0, c.budget-30);
+    c.targetMin = Math.max(0, c.budget-20);
     c.targetMax = c.budget;
-    c.overachieveMax = c.budget+4;
+    c.overachieveMax = c.budget+30;
   }
   else if(['underTargetMax','targetMin','targetMax','overachieveMax'].indexOf(field)>=0) c[field] = Math.max(0, parseInt(value,10)||0);
   else c[field] = Math.max(0, Number(value)||0);
@@ -1182,7 +1222,7 @@ function setRoundFoldingMinutes(roundNumber, value){
   const round = state.rounds[roundNumber-1];
   if(!round || !round.folding) return;
   if(round.folding.status==='running'){
-    toast('Stop the active folding timer before changing its duration.', 'warn');
+    toast('Stop the active loose-fruit recovery timer before changing its duration.', 'warn');
     render();
     return;
   }
@@ -1198,7 +1238,7 @@ function startFoldingRound(){
   const minutes = roundFoldingMinutes(round);
   round.folding.minutes = minutes;
   round.folding.endsAt = new Date(Date.now()+minutes*60000).toISOString();
-  logAction('TimerStart', null, 'Origami tree folding started for Round '+round.number+' ('+minutes+' minutes)');
+  logAction('TimerStart', null, 'Loose-fruit recovery started for Round '+round.number+' ('+minutes+' minutes)');
   persistAndRender();
 }
 function endFoldingRound(){
@@ -1206,33 +1246,33 @@ function endFoldingRound(){
   if(!round || round.folding.status!=='running') return;
   round.folding.status='ended';
   round.folding.endsAt=null;
-  logAction('TimerEnd', null, 'Origami tree folding ended for Round '+round.number);
+  logAction('TimerEnd', null, 'Loose-fruit recovery ended for Round '+round.number);
   persistAndRender();
 }
 function submitTreeCount(value){
   const team = currentTeam();
   const round = state.rounds[state.session.currentRound-1];
-  const count = parseInt(value,10);
-  if(!team || !requireTeamLeader(team.id) || !round || round.folding.status!=='running'){ toast('Tree folding is not currently open.', 'warn'); return; }
-  if(!Number.isInteger(count) || count<0){ toast('Enter a whole number of folded trees.', 'warn'); return; }
+  const count = Number(value);
+  if(!team || !requireTeamLeader(team.id) || !round || round.folding.status!=='running'){ toast('Loose-fruit recovery is not currently open.', 'warn'); return; }
+  if(!Number.isInteger(count) || count<0){ toast('Enter a whole-number recovery amount in grams.', 'warn'); return; }
   round.treeSubs[team.id] = count;
-  logAction('TreeSubmission', team.id, count+' folded trees submitted for Round '+round.number);
+  logAction('LooseFruitSubmission', team.id, count+' recovered loose fruits submitted for Round '+round.number);
   persistAndRender();
 }
 function recordTreeCountForTeam(teamId, value){
   const round = state.rounds[state.session.currentRound-1];
   const team = state.teams.find(t=>t.id===teamId);
-  const count = parseInt(value,10);
+  const count = Number(value);
   if(!team || !round || round.status!=='open' || round.folding.status==='locked'){
-    toast('Open tree folding before recording team results.', 'warn');
+    toast('Open loose-fruit recovery before recording team results.', 'warn');
     return;
   }
   if(!Number.isInteger(count) || count<0){
-    toast('Enter a whole number of folded trees.', 'warn');
+    toast('Enter a whole-number recovery amount in grams.', 'warn');
     return;
   }
   round.treeSubs[team.id] = count;
-  logAction('TreeSubmission', team.id, count+' folded trees recorded by facilitator for Round '+round.number);
+  logAction('LooseFruitSubmission', team.id, count+' recovered loose fruits recorded by facilitator for Round '+round.number);
   persistAndRender();
 }
 
@@ -1651,12 +1691,12 @@ function scoreCurrentRound(){
   const round = state.session.currentRound;
   const r = state.rounds[round-1];
   if(!r || r.folding.status==='locked' || r.folding.status==='running'){
-    toast('Complete the origami tree folding challenge before scoring the round.', 'warn');
+    toast('Complete the recovery of loose fruits activity before scoring the round.', 'warn');
     return;
   }
   const missing = state.teams.filter(team=>r.treeSubs[team.id]===undefined || r.treeSubs[team.id]===null);
   if(missing.length){
-    toast('Enter folded tree totals for every team before scoring.', 'warn');
+    toast('Enter recovered loose-fruit totals for every team before scoring.', 'warn');
     return;
   }
   state.teams.forEach(team=>{
@@ -2249,7 +2289,7 @@ function renderCompanyProfile(){
     +'<div class="company-profile-disclaimer"><strong>Disclaimer:</strong> This game is a simulation. To streamline gameplay, numbers, operational situations, and calculations are abstractions and may differ from live real-world scenarios.</div>'
     +'<header class="company-profile-header">'
       +'<h1>Workforce Strategy Simulation</h1>'
-      +'<p>Welcome to your new role as the Human Resources Leadership Team. You are tasked with staffing and managing a brand-new woodchip-to-pulp fiberline that adds 1.5 million metric tons of annual capacity to our global operations. This landing page outlines the <strong>what</strong>, <strong>why</strong>, and <strong>how</strong> of your upcoming mission. Read carefully—your strategic decisions here will dictate the long-term success of the operation.</p>'
+      +'<p>Welcome to your new role as the Human Resources Leadership Team. You are tasked with staffing and managing a brand-new palm oil mill operation. This landing page outlines the <strong>what</strong>, <strong>why</strong>, and <strong>how</strong> of your upcoming mission. Read carefully—your strategic decisions here will dictate the long-term success of the operation.</p>'
     +'</header>'
     +'<section class="company-profile-block">'
       +'<h2>THE WHAT: Your Mission</h2>'
@@ -2268,8 +2308,8 @@ function renderCompanyProfile(){
       +'<p>The simulation unfolds over several cycles, with each cycle representing one quarter of operations. You will navigate three distinct phases:</p>'
       +'<ol class="company-profile-list">'
         +'<li><strong>Phase 1: EVP Craft &amp; Presentation</strong> - You will craft an Employee Value Proposition based on the company profile, values, and philosophy, then share it with the facilitator through an agreed third-party channel. Your score will determine your starting budget of game coins.</li>'
-        +'<li><strong>Phase 2: The Marketplace</strong> - Using your budget, you will enter a first-come, first-served draft to build a 5-person roster. Gold and Silver talents provide stronger skills, while up to 10 no-cost Bronze talents (10 in every work area) are available as a last-resort fallback.</li>'
-        +'<li><strong>Phase 3: Core Operations</strong> - Quarter by quarter, you will deploy your roster across five critical fiberline areas (Chip Screening, Digester, Washing, Bleaching, and HDT). You will face dynamic quarterly updates, conduct Town Hall meetings, and adjust your strategy to maximize output and growth.</li>'
+        +'<li><strong>Phase 2: The Marketplace</strong> - Using your budget, you will enter a first-come, first-served draft to build a 5-person roster. Gold talents demonstrate stronger skills accross all work areas, while Silver talents have a specialization area (high skill in one specific area) and demonstrate low to moderate skills in other areas. Bronze talents are available as a last-resort fallback.</li>'
+        +'<li><strong>Phase 3: Core Operations</strong> - Quarter by quarter, you will deploy your roster across five critical palm oil mill workstations (FFB Grading, Sterilization, Threshing, Pressing, and Clarification). You will face dynamic quarterly updates, conduct Town Hall meetings, and adjust your strategy to maximize output and growth.</li>'
       +'</ol>'
     +'</section>'
     +'<section class="company-profile-block">'
@@ -2323,7 +2363,7 @@ function renderTeamDashboard(team){
     +'<tr><td>EVP strategy evaluation</td><td>'+(state.phaseStatus.evp==='open'?'<span class="badge badge-warn">In progress</span>':state.phaseStatus.evp==='closed'?'<span class="badge badge-open">Evaluated</span>':'<span class="badge badge-locked">Pending</span>')+'</td></tr>'
     +'<tr><td>Roster complete</td><td>'+(team.roster.length>=5?'<span class="badge badge-open">Complete</span>':'<span class="badge badge-locked">'+team.roster.length+'/5</span>')+'</td></tr>'
     +state.rounds.map(r=>'<tr><td>Round '+r.number+' assignment</td><td>'+(r.teamSubs[team.id]?'<span class="badge badge-open">Locked</span>':(r.status==='open'?'<span class="badge badge-warn">Open</span>':'<span class="badge badge-locked">Locked / N-A</span>'))+'</td></tr>'
-      + (r.teamSubs[team.id] ? '<tr><td>Round '+r.number+' tree folding</td><td>'+(r.treeSubs[team.id]!==undefined?'<span class="badge badge-open">'+r.treeSubs[team.id]+' submitted</span>':r.folding.status==='running'?'<span class="badge badge-warn">In progress</span>':r.folding.status==='ended'?'<span class="badge badge-danger">Submit now closed</span>':'<span class="badge badge-locked">Awaiting start</span>')+'</td></tr>' : '')).join('')
+      + (r.teamSubs[team.id] ? '<tr><td>Round '+r.number+' loose-fruit recovery</td><td>'+(r.treeSubs[team.id]!==undefined?'<span class="badge badge-open">'+r.treeSubs[team.id]+'g submitted</span>':r.folding.status==='running'?'<span class="badge badge-warn">In progress</span>':r.folding.status==='ended'?'<span class="badge badge-danger">Submit now closed</span>':'<span class="badge badge-locked">Awaiting start</span>')+'</td></tr>' : '')).join('')
     +'</tbody></table></div>'
     +(state.gameClosed ? '<div class="panel" style="border-color:var(--amber);"><div class="panel-head"><h3>Session Result</h3></div>'
       + (state.winnerTeamId===team.id ? '<div style="font-size:18px;color:var(--amber);font-weight:700;">🏆 '+esc(team.name)+' wins the simulation.</div>' : '<div>Winner: <strong>'+esc((state.teams.find(t=>t.id===state.winnerTeamId)||{}).name||'—')+'</strong></div>')
@@ -2337,7 +2377,7 @@ function renderEVPWorkspace(team){
   }
   return '<div class="grid grid-2">'
     +'<div class="panel"><div class="panel-head"><h3>Craft Your EVP Strategy</h3><span class="badge badge-warn">Phase 1</span></div>'
-    +'<p class="dim small">Use the company profile, values, and philosophy distributed by the facilitator to craft an Employee Value Proposition that will attract and retain the workforce for the new fiberline.</p>'
+    +'<p class="dim small">Use the company profile, values, and philosophy distributed by the facilitator to craft an Employee Value Proposition that will attract and retain the workforce for the new palm oil mill.</p>'
     +'<ul class="small dim" style="margin:14px 0;padding-left:20px;"><li>Explain what your organization offers talent.</li><li>Connect your strategy to the company&rsquo;s purpose and operating context.</li><li>Address growth, development, retention, flexibility, and culture.</li><li>Show how the EVP responds to the geographic and succession challenges.</li></ul>'
     +'<div class="kv"><span>Evaluation</span><span class="badge badge-warn">Facilitator enters judge scores</span></div>'
     +'<div class="kv"><span>Outcome</span><span class="dim">Your score determines your starting marketplace budget</span></div>'
@@ -2438,14 +2478,14 @@ function renderOpsDashboard(team){
   const latestSuccession = readinessHistory.length ? readinessHistory[readinessHistory.length-1].successionReady : 0;
   const control = foldingControl();
   const foldingPanel = round && round.status==='open' && round.teamSubs[team.id]
-    ? '<div class="panel"><div class="panel-head"><h3>Origami Tree Challenge</h3><span class="hint">Budget '+control.budget+' trees</span></div>'
-      +'<p class="dim small">Fold trees from the onsite blueprint. Your result changes this round\'s operational score: '+control.belowMultiplier+'× below '+control.underTargetMax+', '+control.neutralMultiplier+'× neutral, '+control.targetMultiplier+'× budget achieved, '+control.overachieveMultiplier+'× overachieved, '+control.exceedMultiplier+'× exceeded.</p>'
+    ? '<div class="panel"><div class="panel-head"><h3>Recovery of Loose Fruits</h3><span class="hint">Target '+control.budget+' grams</span></div>'
+      +'<p class="dim small">Recover loose fruits during the physical activity. Your result changes this round\'s operational score: '+control.belowMultiplier+'× below target (&lt;60g), '+control.neutralMultiplier+'× can improve (60g to &lt;70g), '+control.targetMultiplier+'× achieve budget (70g–90g), '+control.overachieveMultiplier+'× overachieve (&gt;90g and &le;120g), '+control.exceedMultiplier+'× excellent (&gt;120g).</p>'
       +(round.folding.status==='running'
-        ? '<div class="timer-box warn" style="margin:12px 0;"><div class="label">Folding time remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(round.folding.endsAt))+'</div></div>'
-          +'<div class="row"><div class="field"><label>Folded trees</label><input type="number" min="0" id="treeCountInput" value="'+(round.treeSubs[team.id]??'')+'" '+(teamCanAct(team.id)?'':'disabled')+'></div><button class="btn btn-amber" style="margin-top:20px;" '+(teamCanAct(team.id)?'':'disabled')+' onclick="submitTreeCount(document.getElementById(\'treeCountInput\').value)">Submit Tree Count</button></div>'
+        ? '<div class="timer-box warn" style="margin:12px 0;"><div class="label">Recovery time remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(round.folding.endsAt))+'</div></div>'
+          +'<div class="row"><div class="field"><label>Loose fruits recovered (grams)</label><input type="number" min="0" step="1" id="treeCountInput" value="'+(round.treeSubs[team.id]??'')+'" '+(teamCanAct(team.id)?'':'disabled')+'></div><button class="btn btn-amber" style="margin-top:20px;" '+(teamCanAct(team.id)?'':'disabled')+' onclick="submitTreeCount(document.getElementById(\'treeCountInput\').value)">Submit Recovery Count</button></div>'
         : round.treeSubs[team.id]!==undefined
-          ? '<span class="badge badge-open">'+round.treeSubs[team.id]+' trees submitted — '+treeBandLabel(round.treeSubs[team.id])+'</span>'
-          : '<span class="badge badge-locked">Folding has not started</span>')
+          ? '<span class="badge badge-open">'+round.treeSubs[team.id]+'g recovered — '+treeBandLabel(round.treeSubs[team.id])+'</span>'
+          : '<span class="badge badge-locked">Loose-fruit recovery has not started</span>')
       +'</div>' : '';
   return '<div class="stack">'
     +'<div class="grid grid-4">'
@@ -2713,14 +2753,14 @@ function renderAdminTeams(){
     +'<button class="btn btn-cyan" onclick="seedSixTeamRehearsal()">Load Six-Team Rehearsal</button>'
     +'<button class="btn btn-green" style="margin-left:8px;" onclick="seedSixTeamThroughRound2()">Load Through Round 2</button>'
     +'<button class="btn btn-amber" style="margin-left:8px;" onclick="seedSixTeamFullRehearsal()">Load Full 8-Round Session</button></div>'
-    +'<div class="panel"><div class="panel-head"><h3>Origami Tree Challenge Settings</h3><span class="hint">Used as the default for new rounds</span></div>'
+    +'<div class="panel"><div class="panel-head"><h3>Loose-Fruit Recovery Settings</h3><span class="hint">Used as the default for new rounds</span></div>'
     +'<div class="grid grid-3">'
-    +'<div class="field"><label>Default folding time (minutes)</label><input type="number" min="1" max="60" value="'+foldingControl().minutes+'" onchange="setFoldingSetting(\'minutes\',this.value)"></div>'
-    +'<div class="field"><label>Tree budget</label><input type="number" min="0" value="'+foldingControl().budget+'" onchange="setFoldingSetting(\'budget\',this.value)"></div>'
-    +'<div class="field"><label>Below-target max trees</label><input type="number" min="0" value="'+foldingControl().underTargetMax+'" onchange="setFoldingSetting(\'underTargetMax\',this.value)"></div>'
-    +'<div class="field"><label>Budget achieved minimum</label><input type="number" min="0" value="'+foldingControl().targetMin+'" onchange="setFoldingSetting(\'targetMin\',this.value)"></div>'
-    +'<div class="field"><label>Budget achieved maximum</label><input type="number" min="0" value="'+foldingControl().targetMax+'" onchange="setFoldingSetting(\'targetMax\',this.value)"></div>'
-    +'<div class="field"><label>Overachieved maximum</label><input type="number" min="0" value="'+foldingControl().overachieveMax+'" onchange="setFoldingSetting(\'overachieveMax\',this.value)"></div>'
+    +'<div class="field"><label>Default recovery time (minutes)</label><input type="number" min="1" max="60" value="'+foldingControl().minutes+'" onchange="setFoldingSetting(\'minutes\',this.value)"></div>'
+    +'<div class="field"><label>Achieve-budget maximum (grams)</label><input type="number" min="0" value="'+foldingControl().budget+'" onchange="setFoldingSetting(\'budget\',this.value)"></div>'
+    +'<div class="field"><label>Below-target maximum (grams)</label><input type="number" min="0" value="'+foldingControl().underTargetMax+'" onchange="setFoldingSetting(\'underTargetMax\',this.value)"></div>'
+    +'<div class="field"><label>Achieve-budget minimum (grams)</label><input type="number" min="0" value="'+foldingControl().targetMin+'" onchange="setFoldingSetting(\'targetMin\',this.value)"></div>'
+    +'<div class="field"><label>Achieve-budget maximum (grams)</label><input type="number" min="0" value="'+foldingControl().targetMax+'" onchange="setFoldingSetting(\'targetMax\',this.value)"></div>'
+    +'<div class="field"><label>Overachieve maximum (grams)</label><input type="number" min="0" value="'+foldingControl().overachieveMax+'" onchange="setFoldingSetting(\'overachieveMax\',this.value)"></div>'
     +'<div class="field"><label>Below-target multiplier</label><input type="number" min="0" step="0.1" value="'+foldingControl().belowMultiplier+'" onchange="setFoldingSetting(\'belowMultiplier\',this.value)"></div>'
     +'<div class="field"><label>Neutral multiplier</label><input type="number" min="0" step="0.1" value="'+foldingControl().neutralMultiplier+'" onchange="setFoldingSetting(\'neutralMultiplier\',this.value)"></div>'
     +'<div class="field"><label>Budget multiplier</label><input type="number" min="0" step="0.1" value="'+foldingControl().targetMultiplier+'" onchange="setFoldingSetting(\'targetMultiplier\',this.value)"></div>'
@@ -2800,33 +2840,33 @@ function renderAdminPhases(){
       const allSubmitted = submitted===state.teams.length;
       html += '<div class="round-flow">'
         +'<div class="round-flow-step '+(locked===state.teams.length?'done':r.status==='open'?'active':'')+'"><span class="step-number">1</span><span>Assignments<br><strong>'+locked+'/'+state.teams.length+' locked</strong></span></div>'
-        +'<div class="round-flow-step '+(foldingDone?'done':r.folding.status==='running'?'active':'')+'"><span class="step-number">2</span><span>Tree folding<br><strong>'+(!foldingDone&&r.folding.status==='running'?'In progress':foldingDone?'Complete':'Waiting')+'</strong></span></div>'
+        +'<div class="round-flow-step '+(foldingDone?'done':r.folding.status==='running'?'active':'')+'"><span class="step-number">2</span><span>Loose-fruit recovery<br><strong>'+(!foldingDone&&r.folding.status==='running'?'In progress':foldingDone?'Complete':'Waiting')+'</strong></span></div>'
         +'<div class="round-flow-step '+(allSubmitted?'done':foldingDone?'active':'')+'"><span class="step-number">3</span><span>Record results<br><strong>'+submitted+'/'+state.teams.length+' submitted</strong></span></div>'
         +'</div>';
-      html += '<div class="field" style="max-width:260px;margin-top:12px;"><label>Round '+r.number+' folding time (minutes)</label><input type="number" min="1" max="60" value="'+roundFoldingMinutes(r)+'" '+(r.folding.status==='running' || r.status==='scored'?'disabled':'')+' onchange="setRoundFoldingMinutes('+r.number+',this.value)"></div>';
+      html += '<div class="field" style="max-width:260px;margin-top:12px;"><label>Round '+r.number+' recovery time (minutes)</label><input type="number" min="1" max="60" value="'+roundFoldingMinutes(r)+'" '+(r.folding.status==='running' || r.status==='scored'?'disabled':'')+' onchange="setRoundFoldingMinutes('+r.number+',this.value)"></div>';
       if(isCurrent && r.status==='open'){
           if(r.folding.status!=='locked'){
-            html += '<div class="panel tree-entry-panel"><div class="panel-head"><h3>Record folded trees</h3><span class="badge '+(allSubmitted?'badge-open':'badge-warn')+'">'+submitted+'/'+state.teams.length+' complete</span></div>'
-              +'<p class="dim small">Enter the final count from each team&rsquo;s onsite worksheet. Each value saves immediately.</p>'
+            html += '<div class="panel tree-entry-panel"><div class="panel-head"><h3>Record recovered loose fruits</h3><span class="badge '+(allSubmitted?'badge-open':'badge-warn')+'">'+submitted+'/'+state.teams.length+' complete</span></div>'
+              +'<p class="dim small">Enter the final loose-fruit recovery count from each team&rsquo;s physical activity. Each value saves immediately.</p>'
               +'<div class="tree-entry-grid">'
-              +state.teams.map(team=>{ const hasValue=r.treeSubs[team.id]!==undefined; return '<div class="tree-entry-card '+(hasValue?'complete':'')+'"><label for="trees-'+team.id+'">'+esc(team.name)+'</label><input id="trees-'+team.id+'" type="number" min="0" step="1" placeholder="0" value="'+(hasValue?r.treeSubs[team.id]:'')+'" onchange="recordTreeCountForTeam(\''+team.id+'\', this.value)" aria-label="'+esc(team.name)+' folded trees"></div>'; }).join('')
+              +state.teams.map(team=>{ const hasValue=r.treeSubs[team.id]!==undefined; return '<div class="tree-entry-card '+(hasValue?'complete':'')+'"><label for="trees-'+team.id+'">'+esc(team.name)+'</label><input id="trees-'+team.id+'" type="number" min="0" step="1" placeholder="0" value="'+(hasValue?r.treeSubs[team.id]:'')+'" onchange="recordTreeCountForTeam(\''+team.id+'\', this.value)" aria-label="'+esc(team.name)+' loose fruits recovered in whole grams"></div>'; }).join('')
               +'</div><div class="tree-entry-footer"><span class="dim small">'+(allSubmitted?'All teams are ready for scoring.':'Complete every team before scoring.')+'</span><span class="mono small">'+submitted+'/'+state.teams.length+'</span></div></div>';
           }
          if(r.folding.status==='locked'){
-          html += '<button class="btn btn-cyan" '+(locked<state.teams.length?'disabled':'')+' onclick="startFoldingRound()">Start '+roundFoldingMinutes(r)+'-Minute Tree Folding</button>';
+          html += '<button class="btn btn-cyan" '+(locked<state.teams.length?'disabled':'')+' onclick="startFoldingRound()">Start '+roundFoldingMinutes(r)+'-Minute Loose-Fruit Recovery</button>';
         } else if(r.folding.status==='running'){
-          html += '<div class="row"><div class="timer-box warn"><div class="label">Folding remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(r.folding.endsAt))+'</div></div><button class="btn btn-red" onclick="endFoldingRound()">End Folding Early</button></div>';
+          html += '<div class="row"><div class="timer-box warn"><div class="label">Recovery remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(r.folding.endsAt))+'</div></div><button class="btn btn-red" onclick="endFoldingRound()">End Recovery Early</button></div>';
         } else {
-          html += '<span class="badge badge-open">Folding complete</span> <button class="btn btn-cyan" '+(submitted<state.teams.length?'disabled':'')+' onclick="scoreCurrentRound()">Score Round '+r.number+'</button>';
+          html += '<span class="badge badge-open">Recovery complete</span> <button class="btn btn-cyan" '+(submitted<state.teams.length?'disabled':'')+' onclick="scoreCurrentRound()">Score Round '+r.number+'</button>';
         }
       } else if(isCurrent && r.status==='scored'){
         html += '<p class="dim small">Round scored. Trigger disruptions if desired, then publish and advance.</p>'
           +'<div class="row"><button class="btn btn-green" onclick="publishLeaderboard()">Publish Leaderboard</button>'
           +'<button class="btn btn-amber" onclick="unlockNextRound()">'+(r.number<state.session.numRounds?'Unlock Round '+(r.number+1):'Close Session')+'</button></div>';
       } else if(r.status==='scored'){
-        html += '<div class="tree-entry-panel"><div class="panel-head"><h3>Folded trees recorded</h3><span class="badge badge-open">'+submitted+'/'+state.teams.length+' complete</span></div>'
+        html += '<div class="tree-entry-panel"><div class="panel-head"><h3>Recovered loose fruits recorded</h3><span class="badge badge-open">'+submitted+'/'+state.teams.length+' complete</span></div>'
           +'<div class="tree-entry-grid">'
-          +state.teams.map(team=>'<div class="tree-entry-card complete"><label>'+esc(team.name)+'</label><span class="mono">'+(r.treeSubs[team.id]??'—')+' trees</span></div>').join('')
+          +state.teams.map(team=>'<div class="tree-entry-card complete"><label>'+esc(team.name)+'</label><span class="mono">'+(r.treeSubs[team.id]??'—')+'g recovered</span></div>').join('')
           +'</div></div><p class="dim small" style="margin-top:12px;">Score: '+state.teams.map(t=>esc(t.name)+' '+(r.results[t.id]??'—')).join(' · ')+'</p>';
       } else {
         html += '<p class="dimmer small">Not yet reached.</p>';
