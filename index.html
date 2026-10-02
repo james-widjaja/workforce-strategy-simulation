@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Workforce Strategy Simulation â€” Control Deck</title>
+<title>Workforce Strategy Simulation — Control Deck</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
@@ -551,7 +551,7 @@ textarea{resize:vertical;min-height:120px;}
 <div id="app"></div>
 <script>
 /* =========================================================================
-   WORKFORCE STRATEGY SIMULATION â€” CONTROL DECK
+   WORKFORCE STRATEGY SIMULATION — CONTROL DECK
    Single-file SPA: state store + scoring engine + disruption engine +
    phase controller + render layer. Firebase shared persistence with local fallback.
    ========================================================================= */
@@ -607,7 +607,7 @@ function buildTalentPool(){
   // with a narrow spread, and higher cost yields a higher overall profile.
   for(let i=0;i<12;i++){
     const cost = ri(72,98);
-    const base = 82 + Math.round((cost-72)*0.32); // 82â€“90, tied to cost
+    const base = 82 + Math.round((cost-72)*0.32); // 82–90, tied to cost
     const skills = {};
     AREAS.forEach(a=>skills[a]=Math.max(80, Math.min(96, base+ri(-3,3))));
     talents.push({
@@ -619,7 +619,7 @@ function buildTalentPool(){
   // but no Silver profile can overlap Gold's consistently high capability.
   for(let i=0;i<44;i++){
     const cost = ri(15,55);
-    const base = 24 + Math.round((cost-15)*0.85); // 24â€“58, tied to cost
+    const base = 24 + Math.round((cost-15)*0.85); // 24–58, tied to cost
     const skills = {};
     const specialty = pick(AREAS);
     AREAS.forEach(a=>skills[a]=Math.max(18, Math.min(50, base+ri(-5,5))));
@@ -1012,7 +1012,7 @@ function liveTimerTick(){
     const remaining = timerRemaining(control.presentationEndsAt);
     const display = document.getElementById('evpPresentationTimer');
     if(display) display.textContent = formatTimer(remaining);
-    if(remaining===0){ control.presentationStatus='ended'; control.presentationEndsAt=null; changed=true; toast('Presentation time is up â€” hard stop.', 'warn'); }
+    if(remaining===0){ control.presentationStatus='ended'; control.presentationEndsAt=null; changed=true; toast('Presentation time is up — hard stop.', 'warn'); }
   }
   if(control.planningStatus==='running'){
     const remaining = timerRemaining(control.planningEndsAt);
@@ -1041,7 +1041,7 @@ function toast(msg, kind){
   setTimeout(()=>t.remove(), 3200);
 }
 
-/* In-app confirmation modal â€” used instead of the native browser confirm(),
+/* In-app confirmation modal — used instead of the native browser confirm(),
    which is silently suppressed inside sandboxed/embedded preview frames and
    gives no visual feedback either way. Transient UI state, not persisted. */
 let pendingConfirm = null; // {title, message, onYes}
@@ -1096,7 +1096,7 @@ function setEVPJudgeTotal(teamId, judgeIndex, value){
   team.evpScore = calculateEVPScore(team);
   save();
   const average = document.getElementById('evpAverage_'+teamId);
-  if(average) average.textContent = team.evpScore===null ? 'â€”' : team.evpScore;
+  if(average) average.textContent = team.evpScore===null ? '—' : team.evpScore;
 }
 
 function currentAssignmentsFor(teamId, round){
@@ -1578,7 +1578,7 @@ function renderPresentationOrder(){
   const ids = control.presentationOrder.length ? control.presentationOrder : state.teams.map(t=>t.id);
   const teams = ids.map(id=>state.teams.find(t=>t.id===id)).filter(Boolean);
   const order = control.presentationOrder.length
-    ? '<ol class="small" style="margin:10px 0 0;padding-left:20px;">'+teams.map((team,i)=>'<li '+(i===control.presentationIndex?'style="color:var(--amber);font-weight:700;"':'')+'>'+esc(team.name)+(i===control.presentationIndex?' â€” next':'')+'</li>').join('')+'</ol>'
+    ? '<ol class="small" style="margin:10px 0 0;padding-left:20px;">'+teams.map((team,i)=>'<li '+(i===control.presentationIndex?'style="color:var(--amber);font-weight:700;"':'')+'>'+esc(team.name)+(i===control.presentationIndex?' — next':'')+'</li>').join('')+'</ol>'
     : '<p class="dim small">Randomize the order to publish a presentation sequence to all teams.</p>';
   return order;
 }
@@ -1723,7 +1723,7 @@ function unlockNextRound(){
     let best = null;
     state.teams.forEach(t=>{ if(!best || t.final>best.final) best = t; });
     state.winnerTeamId = best ? best.id : null;
-    logAction('Publish', null, 'Final round complete â€” session closed');
+    logAction('Publish', null, 'Final round complete — session closed');
   }
   persistAndRender();
 }
@@ -1750,7 +1750,7 @@ function applyTeamConfig(newNumTeams, newPlayersPerTeam){
   const p = clampPlayersPerTeam(newPlayersPerTeam);
   askConfirm(
     'Rebuild Teams',
-    'Changing the team count or size regenerates all teams with fresh codes and wipes current rosters, budgets, scores, assignments and events for this session ('+n+' teams Ã— '+p+' players). Continue?',
+    'Changing the team count or size regenerates all teams with fresh codes and wipes current rosters, budgets, scores, assignments and events for this session ('+n+' teams × '+p+' players). Continue?',
     ()=>doApplyTeamConfig(n,p)
   );
 }
@@ -1794,7 +1794,7 @@ function doResetSimulation(){
     state.ui.adminTab = 'teams';
   }
   persistAndRender();
-  toast('Simulation reset â€” fresh session ready.');
+  toast('Simulation reset — fresh session ready.');
 }
 
 function seedSixTeamRehearsal(){
@@ -2049,13 +2049,13 @@ function resetTeamLeader(teamId){
 
 function phaseLabel(){
   if(state.gameClosed) return 'Session Closed';
-  if(state.phaseStatus.evp!=='closed') return 'Phase 1 Â· EVP';
-  if(state.phaseStatus.marketplace!=='closed') return 'Phase 2 Â· Recruitment';
-  return 'Phase 3 Â· Round '+state.session.currentRound+' / '+state.session.numRounds;
+  if(state.phaseStatus.evp!=='closed') return 'Phase 1 · EVP';
+  if(state.phaseStatus.marketplace!=='closed') return 'Phase 2 · Recruitment';
+  return 'Phase 3 · Round '+state.session.currentRound+' / '+state.session.numRounds;
 }
 
 function skillBar(label, val, specialty){
-  return '<div class="skillbar'+(specialty?' specialty':'')+'"><div class="lbl">'+label+(specialty?' â˜…':'')+'</div><div class="track"><div class="fill" style="height:'+val+'%"></div></div><div class="val">'+val+'</div></div>';
+  return '<div class="skillbar'+(specialty?' specialty':'')+'"><div class="lbl">'+label+(specialty?' ★':'')+'</div><div class="track"><div class="fill" style="height:'+val+'%"></div></div><div class="val">'+val+'</div></div>';
 }
 
 function talentCardMarket(t, team){
@@ -2118,7 +2118,7 @@ function validateDraftPlacements(team, placements, requireComplete){
   const assigned = Object.values(placements).filter(Boolean);
   const completeCheck = requireComplete !== false;
   if(completeCheck && assigned.length !== AREAS.length){
-    return { valid:false, reason:'Place one talent in each work area (Aâ€“E) before locking.' };
+    return { valid:false, reason:'Place one talent in each work area (A–E) before locking.' };
   }
   if(new Set(assigned).size !== assigned.length){
     return { valid:false, reason:'Each talent can only be assigned to one work area.' };
@@ -2227,12 +2227,12 @@ function renderLogin(){
   if(mode==='team'){
     body = '<div class="field"><label>Team Code</label><input type="text" id="teamCodeInput" placeholder="e.g. T1-XXX" autofocus></div>'
       +'<button class="btn btn-amber btn-block" onclick="loginAsTeam(document.getElementById(\'teamCodeInput\').value)">Enter Simulation</button>'
-      +'<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="setLoginMode(null)">â† Back</button></div>'
+      +'<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="setLoginMode(null)">← Back</button></div>'
       +'<p class="dimmer small" style="margin-top:18px;">The first person to use a team code becomes the team leader. Later users join as read-only viewers.</p>';
   } else if(mode==='facilitator'){
     body = '<div class="field"><label>Facilitator Key</label><input type="password" id="facKeyInput" placeholder="Facilitator key" autofocus></div>'
       +'<button class="btn btn-amber btn-block" onclick="loginAsFacilitator(document.getElementById(\'facKeyInput\').value)">Open Admin Console</button>'
-      +'<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="setLoginMode(null)">â† Back</button></div>';
+      +'<div style="margin-top:10px;"><button class="btn btn-ghost btn-sm" onclick="setLoginMode(null)">← Back</button></div>';
   } else {
     body = '<button class="btn btn-amber btn-block" style="padding:14px;margin-bottom:10px;" onclick="setLoginMode(\'team\')">Team Login</button>'
       +'<button class="btn btn-ghost btn-block" style="padding:10px;font-size:11px;" onclick="setLoginMode(\'facilitator\')">Facilitator Access</button>';
@@ -2240,7 +2240,7 @@ function renderLogin(){
   return '<div class="login-shell"><div class="login-card">'
     +'<div class="panel">'
     +'<div class="login-title">'+esc(state.session.name)+'</div>'
-    +'<div class="login-sub">Workforce lifecycle simulation Â· '+state.teams.length+' teams Â· '+state.session.numRounds+' rounds</div>'
+    +'<div class="login-sub">Workforce lifecycle simulation · '+state.teams.length+' teams · '+state.session.numRounds+' rounds</div>'
     +body
     +'</div></div></div>';
 }
@@ -2254,7 +2254,7 @@ function renderTopbar(){
   let right = '<div class="topbar-right">';
   if(team){
     right += '<div class="team-chip"><span class="color-dot" style="background:'+team.color+'"></span>'+esc(team.name)+'</div>';
-    right += '<span class="badge '+(isTeamViewer()?'badge-locked':'badge-open')+'">'+(isTeamViewer()?'VIEWER Â· READ ONLY':'TEAM LEADER')+'</span>';
+    right += '<span class="badge '+(isTeamViewer()?'badge-locked':'badge-open')+'">'+(isTeamViewer()?'VIEWER · READ ONLY':'TEAM LEADER')+'</span>';
   } else if(state.role && state.role.type==='facilitator'){
     right += '<div class="badge badge-warn">FACILITATOR MODE</div>';
   }
@@ -2262,7 +2262,7 @@ function renderTopbar(){
   if(state.role){
     right += '<button class="btn btn-ghost btn-sm" onclick="logout()">Switch Role</button>';
   }
-  right += '<button class="btn btn-ghost btn-sm theme-toggle" onclick="toggleTheme()" aria-label="Switch to '+(state.ui.theme==='dark'?'light':'dark')+' mode">'+(state.ui.theme==='dark'?'â˜€ Light mode':'â˜¾ Dark mode')+'</button>';
+  right += '<button class="btn btn-ghost btn-sm theme-toggle" onclick="toggleTheme()" aria-label="Switch to '+(state.ui.theme==='dark'?'light':'dark')+' mode">'+(state.ui.theme==='dark'?'☀ Light mode':'☾ Dark mode')+'</button>';
   right += '</div>';
   return '<div class="topbar">'+left+right+'</div>';
 }
@@ -2289,7 +2289,7 @@ function renderCompanyProfile(){
     +'<div class="company-profile-disclaimer"><strong>Disclaimer:</strong> This game is a simulation. To streamline gameplay, numbers, operational situations, and calculations are abstractions and may differ from live real-world scenarios.</div>'
     +'<header class="company-profile-header">'
       +'<h1>Workforce Strategy Simulation</h1>'
-      +'<p>Welcome to your new role as the Human Resources Leadership Team. You are tasked with staffing and managing a brand-new palm oil mill operation. This landing page outlines the <strong>what</strong>, <strong>why</strong>, and <strong>how</strong> of your upcoming mission. Read carefullyâ€”your strategic decisions here will dictate the long-term success of the operation.</p>'
+      +'<p>Welcome to your new role as the Human Resources Leadership Team. You are tasked with staffing and managing a brand-new palm oil mill operation. This landing page outlines the <strong>what</strong>, <strong>why</strong>, and <strong>how</strong> of your upcoming mission. Read carefully—your strategic decisions here will dictate the long-term success of the operation.</p>'
     +'</header>'
     +'<section class="company-profile-block">'
       +'<h2>THE WHAT: Your Mission</h2>'
@@ -2297,7 +2297,7 @@ function renderCompanyProfile(){
     +'</section>'
     +'<section class="company-profile-block">'
       +'<h2>THE WHY: The Core Challenge</h2>'
-      +'<p>The true test of organizational strategy is balancing <strong>todayâ€™s operational needs</strong> with <strong>tomorrowâ€™s readiness</strong>. To succeed, you must solve two pressing industry bottlenecks:</p>'
+      +'<p>The true test of organizational strategy is balancing <strong>today’s operational needs</strong> with <strong>tomorrow’s readiness</strong>. To succeed, you must solve two pressing industry bottlenecks:</p>'
       +'<div class="company-profile-grid">'
         +'<div class="company-profile-card"><h3>The Geographic Challenge</h3><p>Our facilities are located near raw materials, away from urban centers. You must craft a compelling Employee Value Proposition (EVP) to attract young, diverse, global talent to our remote communities.</p></div>'
         +'<div class="company-profile-card"><h3>The Succession Gap</h3><p>Our most experienced line supervisors are approaching retirement. You must actively manage knowledge transfer and strategically develop your younger talent to eventually take the helm.</p></div>'
@@ -2314,7 +2314,7 @@ function renderCompanyProfile(){
     +'</section>'
     +'<section class="company-profile-block">'
       +'<h2>HOW TO WIN: The Scoring Criteria</h2>'
-      +'<p>Your teamâ€™s success will be measured across five dimensions (Total: 100 Points):</p>'
+      +'<p>Your team’s success will be measured across five dimensions (Total: 100 Points):</p>'
       +'<ul class="company-profile-list company-profile-scoring">'
         +'<li><strong>Operational Performance (40 pts):</strong> Generate the highest operational output by placing the right talent in the right roles.</li>'
         +'<li><strong>Skill Growth (20 pts):</strong> Maximize employee skill increments by strategically placing talent outside their comfort zones to capitalize on steep learning curves.</li>'
@@ -2366,7 +2366,7 @@ function renderTeamDashboard(team){
       + (r.teamSubs[team.id] ? '<tr><td>Round '+r.number+' loose-fruit recovery</td><td>'+(r.recoverySubs[team.id]!==undefined?'<span class="badge badge-open">'+r.recoverySubs[team.id]+'g submitted</span>':r.folding.status==='running'?'<span class="badge badge-warn">In progress</span>':r.folding.status==='ended'?'<span class="badge badge-danger">Submit now closed</span>':'<span class="badge badge-locked">Awaiting start</span>')+'</td></tr>' : '')).join('')
     +'</tbody></table></div>'
     +(state.gameClosed ? '<div class="panel" style="border-color:var(--amber);"><div class="panel-head"><h3>Session Result</h3></div>'
-      + (state.winnerTeamId===team.id ? '<div style="font-size:18px;color:var(--amber);font-weight:700;">ðŸ† '+esc(team.name)+' wins the simulation.</div>' : '<div>Winner: <strong>'+esc((state.teams.find(t=>t.id===state.winnerTeamId)||{}).name||'â€”')+'</strong></div>')
+      + (state.winnerTeamId===team.id ? '<div style="font-size:18px;color:var(--amber);font-weight:700;">ðŸ† '+esc(team.name)+' wins the simulation.</div>' : '<div>Winner: <strong>'+esc((state.teams.find(t=>t.id===state.winnerTeamId)||{}).name||'—')+'</strong></div>')
       +'</div>' : '')
     +'</div>';
 }
@@ -2391,7 +2391,7 @@ function renderMarketplace(team){
   const roster = teamRoster(team);
   const rosterProgress = Math.min(100, Math.round(roster.length/5*100));
   const marketplaceSummary = '<div class="marketplace-summary">'
-    +'<div class="marketplace-summary-copy"><h3>Roster Progress</h3><p>Target: 5 talents, 1 gold talent and 4 silver talents Â· Not enough coins? Bronze talents are a no-cost fallback Â· '+(roster.length>=5?'Roster complete':'Recruit '+(5-roster.length)+' more talent'+(5-roster.length===1?'':'s'))+'</p></div>'
+    +'<div class="marketplace-summary-copy"><h3>Roster Progress</h3><p>Target: 5 talents, 1 gold talent and 4 silver talents · Not enough coins? Bronze talents are a no-cost fallback · '+(roster.length>=5?'Roster complete':'Recruit '+(5-roster.length)+' more talent'+(5-roster.length===1?'':'s'))+'</p></div>'
     +'<div class="marketplace-progress"><div class="marketplace-progress-track"><div class="marketplace-progress-fill" style="width:'+rosterProgress+'%;"></div></div><div class="marketplace-progress-value">'+roster.length+'/5</div></div>'
     +'</div>';
   if(state.phaseStatus.marketplace==='locked'){
@@ -2405,7 +2405,7 @@ function renderMarketplace(team){
   const planningCountdown = planningControl.planningStatus==='running'
     ? '<div class="timer-box warn" style="margin-top:12px;"><div class="label">Planning time remaining</div><div class="value" id="teamMarketplacePlanningTimer">'+formatTimer(timerRemaining(planningControl.planningEndsAt))+'</div></div>'
     : planningControl.planningStatus==='ended'
-      ? '<div class="badge badge-open" style="margin-top:10px;">Planning time complete â€” awaiting facilitator</div>'
+      ? '<div class="badge badge-open" style="margin-top:10px;">Planning time complete — awaiting facilitator</div>'
       : '<div class="badge badge-locked" style="margin-top:10px;">Planning timer not started</div>';
   return marketplaceSummary+'<div class="row" style="align-items:flex-start;">'
     +'<div style="flex:1;min-width:320px;" class="stack">'
@@ -2414,7 +2414,7 @@ function renderMarketplace(team){
       +(state.phaseStatus.marketplace==='planning' ? '<div class="recruitment-warning"><strong>Important:</strong> Recruitment is final. Once you choose a talent, they are permanently added to your roster and cannot be released or exchanged. All teams draw from the same shared talent pool, so recruitment is first come, first served. Another team may claim your preferred talent before you do. Use planning mode to agree on your selections and backups before recruitment opens.'+planningCountdown+'</div>' : '')
       +'<div class="panel"><div class="panel-head"><h3>Gold Tier</h3><span class="hint">1 slot</span></div><div class="grid grid-3">'+gold.map(t=>talentCardMarket(t,team)).join('')+'</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Silver Tier</h3><span class="hint">4 slots</span></div><div class="grid grid-3">'+silver.map(t=>talentCardMarket(t,team)).join('')+'</div></div>'
-      +'<div class="panel"><div class="panel-head"><h3>Bronze Tier</h3><span class="hint">10 available Â· 0 coins</span></div><p class="dim small" style="margin-bottom:10px;">Last-resort talents with a constant skill of 10 in every work area. Use them to complete your roster if your budget is depleted.</p><div class="grid grid-3">'+bronze.map(t=>talentCardMarket(t,team)).join('')+'</div></div>'
+      +'<div class="panel"><div class="panel-head"><h3>Bronze Tier</h3><span class="hint">10 available · 0 coins</span></div><p class="dim small" style="margin-bottom:10px;">Last-resort talents with a constant skill of 10 in every work area. Use them to complete your roster if your budget is depleted.</p><div class="grid grid-3">'+bronze.map(t=>talentCardMarket(t,team)).join('')+'</div></div>'
     +'</div>'
     +'<div class="panel marketplace-roster">'
       +'<div class="panel-head"><h3>Your Roster</h3><span class="hint">'+roster.length+'/5</span></div>'
@@ -2457,14 +2457,14 @@ function renderPlanningBoard(team){
   }).join('');
 
   return '<div class="stack">'
-    +'<div class="panel"><div class="panel-head"><h3>Round '+round+' â€” Unassigned Roster</h3><span class="hint">Drag a card into a work-area column</span></div>'
+    +'<div class="panel"><div class="panel-head"><h3>Round '+round+' — Unassigned Roster</h3><span class="hint">Drag a card into a work-area column</span></div>'
     +'<div class="tray" ondragover="onDragOverZone(event)" ondragleave="onDragLeaveZone(event)" ondrop="onDropTray(event)">'+trayHtml+'</div></div>'
     +'<div class="board">'+boardHtml+'</div>'
     +'<div class="panel">'
     +(locked
       ? '<span class="badge badge-open">Assignment locked for Round '+round+'</span>'
       : canAct ? '<button class="btn btn-amber" onclick="lockPlanningBoard()">Lock Assignment</button> <span class="dim small">All 5 areas must be filled.</span>'
-      : '<span class="badge badge-locked">Team leader only â€” assignment is view-only.</span>')
+      : '<span class="badge badge-locked">Team leader only — assignment is view-only.</span>')
     +'</div></div>';
 }
 
@@ -2479,12 +2479,12 @@ function renderOpsDashboard(team){
   const control = foldingControl();
   const foldingPanel = round && round.status==='open' && round.teamSubs[team.id]
     ? '<div class="panel"><div class="panel-head"><h3>Recovery of Loose Fruits</h3><span class="hint">Target '+control.budget+' grams</span></div>'
-      +'<p class="dim small">Recover loose fruits during the physical activity. Your result changes this round\'s operational score: '+control.belowMultiplier+'Ã— below target (&lt;60g), '+control.neutralMultiplier+'Ã— can improve (60g to &lt;70g), '+control.targetMultiplier+'Ã— achieve budget (70gâ€“90g), '+control.overachieveMultiplier+'Ã— overachieve (&gt;90g and &le;120g), '+control.exceedMultiplier+'Ã— excellent (&gt;120g).</p>'
+      +'<p class="dim small">Recover loose fruits during the physical activity. Your result changes this round\'s operational score: '+control.belowMultiplier+'× below target (&lt;60g), '+control.neutralMultiplier+'× can improve (60g to &lt;70g), '+control.targetMultiplier+'× achieve budget (70g–90g), '+control.overachieveMultiplier+'× overachieve (&gt;90g and &le;120g), '+control.exceedMultiplier+'× excellent (&gt;120g).</p>'
       +(round.folding.status==='running'
         ? '<div class="timer-box warn" style="margin:12px 0;"><div class="label">Recovery time remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(round.folding.endsAt))+'</div></div>'
           +'<div class="row"><div class="field"><label>Loose fruits recovered (grams)</label><input type="number" min="0" step="1" id="recoveryCountInput" value="'+(round.recoverySubs[team.id]??'')+'" '+(teamCanAct(team.id)?'':'disabled')+'></div><button class="btn btn-amber" style="margin-top:20px;" '+(teamCanAct(team.id)?'':'disabled')+' onclick="submitRecoveryCount(document.getElementById(\'recoveryCountInput\').value)">Submit Recovery Count</button></div>'
         : round.recoverySubs[team.id]!==undefined
-          ? '<span class="badge badge-open">'+round.recoverySubs[team.id]+'g recovered â€” '+recoveryBandLabel(round.recoverySubs[team.id])+'</span>'
+          ? '<span class="badge badge-open">'+round.recoverySubs[team.id]+'g recovered — '+recoveryBandLabel(round.recoverySubs[team.id])+'</span>'
           : '<span class="badge badge-locked">Loose-fruit recovery has not started</span>')
       +'</div>' : '';
   return '<div class="stack">'
@@ -2492,11 +2492,11 @@ function renderOpsDashboard(team){
       +'<div class="panel"><div class="panel-head"><h3>Operational + Multiplier</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+team.operational+'</div><div class="dim small">cumulative score after folding multipliers</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Skill Growth</h3></div><div class="mono" style="font-size:26px;font-weight:700;">+'+skillGrowth+'</div><div class="dim small">total development increment</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Talent Mobility</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+talentMobility+'</div><div class="dim small">goal: rotate at least '+(Math.floor(teamRoster(team).length/2)+1)+' of '+teamRoster(team).length+' talents between consecutive rounds</div></div>'
-      +'<div class="panel"><div class="panel-head"><h3>Successor Identified?</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+latestSuccession+'</div><div class="dim small">goal: Any active talent with skill &gt;75 in 4+ areas Â· 1=+5, 2=+10, 3+=+15</div></div>'
+      +'<div class="panel"><div class="panel-head"><h3>Successor Identified?</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+latestSuccession+'</div><div class="dim small">goal: Any active talent with skill &gt;75 in 4+ areas · 1=+5, 2=+10, 3+=+15</div></div>'
     +'</div>'+foldingPanel
     +'<div class="panel"><div class="panel-head"><h3>Round Results</h3></div>'
     +(scored.length ? '<table><thead><tr><th>Round</th><th>Operational</th><th>Recovered (grams)</th><th>Multiplier</th><th>Operational + Multiplier</th></tr></thead><tbody>'
-      +scored.map(r=>'<tr><td>Round '+r.number+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].base:'â€”')+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].recoveredGrams:'â€”')+'</td><td class="mono">'+(r.recoveryResults[team.id]?'Ã—'+r.recoveryResults[team.id].multiplier:'â€”')+'</td><td class="mono">'+(r.results[team.id]!==undefined?r.results[team.id]:'â€”')+'</td></tr>').join('')
+      +scored.map(r=>'<tr><td>Round '+r.number+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].base:'—')+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].recoveredGrams:'—')+'</td><td class="mono">'+(r.recoveryResults[team.id]?'×'+r.recoveryResults[team.id].multiplier:'—')+'</td><td class="mono">'+(r.results[team.id]!==undefined?r.results[team.id]:'—')+'</td></tr>').join('')
       +'</tbody></table>' : '<p class="dim small">No rounds scored yet.</p>')
     +'</div>'
     +renderTalentDevelopmentHistory(team)+'</div>';
@@ -2546,7 +2546,7 @@ function renderTalentDevelopmentTable(team, roundNumber){
   const talents = talentIdsForDevelopmentRound(team, roundNumber);
   return '<div class="panel"><div class="panel-head"><h3>Round '+roundNumber+' Talent Development</h3><span class="hint">Post-development attributes</span></div>'
     +'<p class="dim small" style="margin-bottom:12px;">Each value shows the skill at the start of the round, the post-development skill, and this round&rsquo;s increment. The next round starts from these ending values.</p><div class="table-wrap"><table><thead><tr><th>Talent</th><th>Tier</th>'
-    +AREAS.map(function(area){ return '<th>'+area+' Â· '+AREA_NAMES[area]+'</th>'; }).join('')+'</tr></thead><tbody>'
+    +AREAS.map(function(area){ return '<th>'+area+' · '+AREA_NAMES[area]+'</th>'; }).join('')+'</tr></thead><tbody>'
     +talents.map(function(talent){
       return '<tr><td>'+esc(talent.name)+(talent.active?'':' <span class="badge badge-danger">inactive</span>')+'</td><td><span class="badge '+(talent.tier==='Gold'?'badge-gold':talent.tier==='Silver'?'badge-silver':'badge-bronze')+'">'+talent.tier+'</span></td>'
         +AREAS.map(function(area){
@@ -2595,7 +2595,7 @@ function renderEventCenter(team){
         const talent = state.talents.find(t=>t.id===e.targetTalentId);
         return '<div class="event-card '+(e.status==='Triggered'?'unresolved':'')+'">'
           +'<div class="event-icon">'+e.type.slice(0,2).toUpperCase()+'</div>'
-          +'<div style="flex:1;"><div style="font-weight:600;">'+e.type+' â€” Round '+e.round+'</div>'
+          +'<div style="flex:1;"><div style="font-weight:600;">'+e.type+' — Round '+e.round+'</div>'
           +'<div class="dim small" style="margin:4px 0;">'+esc(e.description)+'</div>'
           +'<div class="small dimmer">Status: '+e.status+'</div>'
           +(e.status==='Triggered' && teamCanAct(team.id) ? '<button class="btn btn-sm btn-cyan" style="margin-top:6px;" onclick="acknowledgeEvent(\''+e.id+'\')">Acknowledge &amp; Go to Planning Board</button>' : e.status==='Triggered' ? '<span class="badge badge-locked" style="margin-top:6px;">Team leader acknowledgement required</span>' : '')
@@ -2614,7 +2614,7 @@ function renderLeaderboardScreen(team){
 
 function renderLeaderboardTable(){
   const ranked = [...state.teams].sort(leaderboardCompare);
-  return '<div class="panel"><div class="panel-head"><h3>Leaderboard</h3><span class="hint">40% cumulative proportional Operational + Multiplier Â· 40% Readiness Â· 20% Complementary</span></div>'
+  return '<div class="panel"><div class="panel-head"><h3>Leaderboard</h3><span class="hint">40% cumulative proportional Operational + Multiplier · 40% Readiness · 20% Complementary</span></div>'
     +ranked.map((t,i)=>{
       return '<div class="lb-row">'
         +'<div class="lb-rank '+(i===0?'gold':i===1?'silver':i===2?'bronze':'')+'">'+(i+1)+'</div>'
@@ -2622,7 +2622,7 @@ function renderLeaderboardTable(){
         +'<div class="lb-score"><div class="num">'+t.operational+'</div><div class="lbl">Operational + Multiplier</div></div>'
         +'<div class="lb-score"><div class="num">'+t.readiness+'</div><div class="lbl">Readiness</div></div>'
         +'<div class="lb-score"><div class="num">'+t.complementary+'</div><div class="lbl">Complementary</div></div>'
-        +'<div class="lb-score"><div class="num" style="color:var(--amber);font-size:18px;">'+(state.leaderboardPublished?t.final:'â€”')+'</div><div class="lbl">Final</div></div>'
+        +'<div class="lb-score"><div class="num" style="color:var(--amber);font-size:18px;">'+(state.leaderboardPublished?t.final:'—')+'</div><div class="lbl">Final</div></div>'
         +'</div>';
     }).join('')
     +'</div>';
@@ -2638,20 +2638,20 @@ function renderFacilitatorLeaderboardTable(){
   const operationalStep = teamCount>1 ? 10 / (teamCount-1) : 0;
   return '<div class="panel rubric-panel"><div class="panel-head"><h3>Rubric</h3><span class="hint">How the facilitator scores each team</span></div>'
     +'<div class="lb-legend"><span class="operational"><i></i>Operational contribution</span><span class="readiness"><i></i>Readiness contribution</span><span class="complementary"><i></i>Judge score</span></div>'
-    +'<div class="lb-criteria operational-guide"><div class="lb-criteria-title">1 Â· Ranked Operational (40â€“30)</div>'
-      +'<div class="lb-operational-steps"><div class="lb-operational-step"><b>1 Â· Add rounds</b>Add each round&rsquo;s Operational + Multiplier score.</div><div class="lb-operational-step"><b>2 Â· Rank teams</b>Order teams from highest to lowest cumulative score.</div><div class="lb-operational-step"><b>3 Â· Award points</b>Rank 1 receives 40; the last rank receives 30.</div></div>'
-      +'<div class="lb-operational-formula">Ranked Operational = 40 &minus; (rank &minus; 1) &times; '+operationalStep.toFixed(2)+' points &nbsp;Â·&nbsp; '+teamCount+' teams &nbsp;Â·&nbsp; range 40â€“30</div>'
+    +'<div class="lb-criteria operational-guide"><div class="lb-criteria-title">1 · Ranked Operational (40–30)</div>'
+      +'<div class="lb-operational-steps"><div class="lb-operational-step"><b>1 · Add rounds</b>Add each round&rsquo;s Operational + Multiplier score.</div><div class="lb-operational-step"><b>2 · Rank teams</b>Order teams from highest to lowest cumulative score.</div><div class="lb-operational-step"><b>3 · Award points</b>Rank 1 receives 40; the last rank receives 30.</div></div>'
+      +'<div class="lb-operational-formula">Ranked Operational = 40 &minus; (rank &minus; 1) &times; '+operationalStep.toFixed(2)+' points &nbsp;·&nbsp; '+teamCount+' teams &nbsp;·&nbsp; range 40–30</div>'
       +'<div class="dim small" style="margin-top:6px;">If scores tie: compare Raw Operational, then team name. This keeps the ranking and point award consistent.</div>'
     +'</div>'
-    +'<div class="lb-criteria"><div class="lb-criteria-title">2 Â· Ranked Skill Growth (maximum 20)</div>'
-      +'<div class="lb-criteria-steps"><div class="lb-criteria-step"><b>1 Â· Add increments</b>Add every development increment earned by the team&rsquo;s talents.</div><div class="lb-criteria-step"><b>2 Â· Find benchmark</b>The highest team total in this session is <strong>'+growthBenchmark+'</strong>.</div><div class="lb-criteria-step"><b>3 Â· Convert to points</b>The benchmark team receives the full 20 points.</div></div>'
+    +'<div class="lb-criteria"><div class="lb-criteria-title">2 · Ranked Skill Growth (maximum 20)</div>'
+      +'<div class="lb-criteria-steps"><div class="lb-criteria-step"><b>1 · Add increments</b>Add every development increment earned by the team&rsquo;s talents.</div><div class="lb-criteria-step"><b>2 · Find benchmark</b>The highest team total in this session is <strong>'+growthBenchmark+'</strong>.</div><div class="lb-criteria-step"><b>3 · Convert to points</b>The benchmark team receives the full 20 points.</div></div>'
       +'<div class="lb-criteria-formula">Team total &divide; highest team total &times; 20 = Ranked Skill Growth</div>'
       +'<div class="lb-criteria-thresholds"><div class="lb-criteria-threshold"><b>20 pts</b><span>&ge; '+growthThreshold(20)+' total</span></div><div class="lb-criteria-threshold"><b>15 pts</b><span>&ge; '+growthThreshold(15)+' total</span></div><div class="lb-criteria-threshold"><b>10 pts</b><span>&ge; '+growthThreshold(10)+' total</span></div><div class="lb-criteria-threshold"><b>5 pts</b><span>&ge; '+growthThreshold(5)+' total</span></div><div class="lb-criteria-threshold"><b>0 pts</b><span>0 total</span></div></div>'
     +'</div></div>'
     +'<div class="panel"><div class="panel-head"><h3>Facilitator Leaderboard</h3><span class="hint">Final score = operational + readiness + complementary</span></div>'
     +'<div class="lb-table-scroll"><div class="lb-row facilitator lb-header">'
       +'<div></div><div class="lb-team-header">Team</div>'
-      +'<div class="lb-score lb-operational"><div class="lbl">Ranked<br>Operational (40â€“30)</div></div>'
+      +'<div class="lb-score lb-operational"><div class="lbl">Ranked<br>Operational (40–30)</div></div>'
       +'<div class="lb-score"><div class="lbl">Raw<br>Operational</div></div>'
       +'<div class="lb-score"><div class="lbl">Operational<br>+ Multiplier</div></div>'
       +'<div class="lb-score"><div class="lbl">Raw Total<br>Skill Growth</div></div>'
@@ -2676,7 +2676,7 @@ function renderFacilitatorLeaderboardTable(){
         +'<div class="lb-score"><div class="num">'+breakdown.succession+'</div></div>'
         +'<div class="lb-score lb-highlight lb-key-value"><div class="num">'+t.readiness+'</div></div>'
         +'<div class="lb-score lb-complementary lb-key-value"><div class="num">'+t.complementary+'</div></div>'
-        +'<div class="lb-score lb-final-value"><div class="num">'+(state.leaderboardPublished?t.final:'â€”')+'</div></div>'
+        +'<div class="lb-score lb-final-value"><div class="num">'+(state.leaderboardPublished?t.final:'—')+'</div></div>'
         +'</div>';
     }).join('')+'</div>'
     +'</div>';
@@ -2721,20 +2721,20 @@ function adminNav(){
 function setAdminTab(k){ state.ui.adminTab=k; render(); }
 
 function renderAdminTeams(){
-  return '<div class="panel"><div class="panel-head"><h3>Teams</h3><span class="hint">'+state.teams.length+' teams Â· '+state.session.playersPerTeam+' players/team capacity</span></div>'
+  return '<div class="panel"><div class="panel-head"><h3>Teams</h3><span class="hint">'+state.teams.length+' teams · '+state.session.playersPerTeam+' players/team capacity</span></div>'
     +'<table><thead><tr><th>Team</th><th>Code</th><th>Budget</th><th>Roster</th><th>EVP</th><th>Leader access</th><th>Final</th></tr></thead><tbody>'
     +state.teams.map(t=>'<tr><td><span class="color-dot" style="background:'+t.color+'"></span> '+esc(t.name)+'</td>'
       +'<td class="mono">'+t.code+'</td>'
       +'<td class="mono">'+t.budget+'</td>'
       +'<td>'+t.roster.length+'/5</td>'
-      +'<td>'+(t.evpScore!==null?t.evpScore:'â€”')+'</td>'
+      +'<td>'+(t.evpScore!==null?t.evpScore:'—')+'</td>'
       +'<td>'+(state.teamAccess[t.id] && state.teamAccess[t.id].leaderUid
         ? '<span class="badge badge-open">Claimed</span> <button class="btn btn-ghost btn-sm" onclick="resetTeamLeader(\''+t.id+'\')">Reset</button>'
         : '<span class="badge badge-locked">Unclaimed</span>')+'</td>'
       +'<td class="mono">'+(state.leaderboardPublished?t.final:'Pending publication')+'</td></tr>').join('')
     +'</tbody></table></div>'
-    +'<div class="panel"><div class="panel-head"><h3>Cohort Size</h3><span class="hint">'+MIN_TEAMS+'â€“'+MAX_TEAMS+' teams, '+MIN_PLAYERS_PER_TEAM+'â€“'+MAX_PLAYERS_PER_TEAM+' players/team</span></div>'
-    +'<p class="dim small">Rebuilding regenerates every team (new codes, empty rosters) and clears scores/events â€” use this before a session starts, not mid-game.</p>'
+    +'<div class="panel"><div class="panel-head"><h3>Cohort Size</h3><span class="hint">'+MIN_TEAMS+'–'+MAX_TEAMS+' teams, '+MIN_PLAYERS_PER_TEAM+'–'+MAX_PLAYERS_PER_TEAM+' players/team</span></div>'
+    +'<p class="dim small">Rebuilding regenerates every team (new codes, empty rosters) and clears scores/events — use this before a session starts, not mid-game.</p>'
     +'<div class="grid grid-3">'
     +'<div class="field"><label>Number of Teams</label><input type="number" id="cfgNumTeams" min="'+MIN_TEAMS+'" max="'+MAX_TEAMS+'" value="'+state.session.numTeams+'"></div>'
     +'<div class="field"><label>Players per Team</label><input type="number" id="cfgPlayersPerTeam" min="'+MIN_PLAYERS_PER_TEAM+'" max="'+MAX_PLAYERS_PER_TEAM+'" value="'+state.session.playersPerTeam+'"></div>'
@@ -2743,7 +2743,7 @@ function renderAdminTeams(){
     +'<div class="panel"><div class="panel-head"><h3>Session Settings</h3></div>'
     +'<div class="grid grid-3">'
     +'<div class="field"><label>Session Name</label><input type="text" value="'+esc(state.session.name)+'" onchange="updateSessionField(\'name\',this.value)"></div>'
-    +'<div class="field"><label>EVP â†’ Coin Multiplier</label><input type="number" value="'+state.session.evpMultiplier+'" onchange="updateSessionField(\'evpMultiplier\',parseFloat(this.value)||1)"></div>'
+    +'<div class="field"><label>EVP → Coin Multiplier</label><input type="number" value="'+state.session.evpMultiplier+'" onchange="updateSessionField(\'evpMultiplier\',parseFloat(this.value)||1)"></div>'
     +'<div class="field"><label>Skill Growth Benchmark (total increment)</label><div class="input-like mono">'+Math.max(0,...state.teams.map(totalSkillGrowthForTeam))+'</div><div class="dim small">Highest team total in this session = 20 readiness points</div></div>'
     +'<div class="field"><label>Number of Judges</label><input type="number" min="'+MIN_JUDGES+'" max="'+MAX_JUDGES+'" value="'+judgeCount()+'" onchange="setJudgeCount(this.value)"></div>'
     +'<div class="field"><label>Rounds</label><input type="number" min="'+MIN_ROUNDS+'" max="'+MAX_ROUNDS+'" value="'+state.session.numRounds+'" onchange="updateSessionRounds(this.value)"></div>'
@@ -2783,7 +2783,7 @@ function updateSessionRounds(value){
 }
 
 function renderAdminPhases(){
-  let html = '<div class="panel phase-panel"><div class="panel-head"><h3>Phase 1 â€” EVP</h3><span class="badge '+(state.phaseStatus.evp==='open'?'badge-warn':state.phaseStatus.evp==='closed'?'badge-open':'badge-locked')+'">'+state.phaseStatus.evp+'</span></div>';
+  let html = '<div class="panel phase-panel"><div class="panel-head"><h3>Phase 1 — EVP</h3><span class="badge '+(state.phaseStatus.evp==='open'?'badge-warn':state.phaseStatus.evp==='closed'?'badge-open':'badge-locked')+'">'+state.phaseStatus.evp+'</span></div>';
   if(state.phaseStatus.evp==='locked'){
     html += '<button class="btn btn-amber" onclick="unlockEVP()">Unlock EVP Workspace</button>';
   } else if(state.phaseStatus.evp==='open'){
@@ -2794,18 +2794,18 @@ function renderAdminPhases(){
   } else {
     html += '<p class="dim small">Closed. Budgets applied to all teams.</p>';
     const dart = evpControl().dartRound;
-    const dartOptions = '<option value="">Select result</option><option value="0">Miss â€” 0 coins</option><option value="10">Outer circle â€” 10 coins</option><option value="20">Inner circle â€” 20 coins</option><option value="30">Bullseye â€” 30 coins</option>';
+    const dartOptions = '<option value="">Select result</option><option value="0">Miss — 0 coins</option><option value="10">Outer circle — 10 coins</option><option value="20">Inner circle — 20 coins</option><option value="30">Bullseye — 30 coins</option>';
     const finalThrows = state.teams.filter(team=>dart.throws[team.id+'_2']!==undefined).length;
-    html += '<div class="panel dart-panel"><div class="panel-head"><h3>Bonus Round â€” Dart Challenge</h3><span class="badge '+(dart.status==='closed'?'badge-open':'badge-warn')+'">'+(dart.status==='closed'?'Complete':'Awaiting throws')+'</span></div>'
+    html += '<div class="panel dart-panel"><div class="panel-head"><h3>Bonus Round — Dart Challenge</h3><span class="badge '+(dart.status==='closed'?'badge-open':'badge-warn')+'">'+(dart.status==='closed'?'Complete':'Awaiting throws')+'</span></div>'
       +'<p class="dim small">Each team throws three times. Throws 1 and 2 are practice; only throw 3 awards marketplace budget.</p>'
       +'<div class="dart-legend"><span>Practice: no budget impact</span><span>Final: +10 / +20 / +30 coins</span></div>'
       +'<div class="table-wrap"><table><thead><tr><th>Team</th><th>Practice 1</th><th>Practice 2</th><th>Final throw</th><th>Bonus</th></tr></thead><tbody>'
-      +state.teams.map(team=>{ const bonus=Number(team.dartBonus)||0; return '<tr><td><strong>'+esc(team.name)+'</strong></td>'+[0,1,2].map(i=>'<td><select '+(dart.status==='closed'?'disabled':'')+' onchange="recordDartThrow(\''+team.id+'\','+i+',this.value)">'+dartOptions.replace('value="'+(dart.throws[team.id+'_'+i]??'')+'"','value="'+(dart.throws[team.id+'_'+i]??'')+'" selected')+'</select></td>').join('')+'<td class="mono">'+(dart.throws[team.id+'_2']!==undefined?'+'+bonus:'â€”')+'</td></tr>'; }).join('')
+      +state.teams.map(team=>{ const bonus=Number(team.dartBonus)||0; return '<tr><td><strong>'+esc(team.name)+'</strong></td>'+[0,1,2].map(i=>'<td><select '+(dart.status==='closed'?'disabled':'')+' onchange="recordDartThrow(\''+team.id+'\','+i+',this.value)">'+dartOptions.replace('value="'+(dart.throws[team.id+'_'+i]??'')+'"','value="'+(dart.throws[team.id+'_'+i]??'')+'" selected')+'</select></td>').join('')+'<td class="mono">'+(dart.throws[team.id+'_2']!==undefined?'+'+bonus:'—')+'</td></tr>'; }).join('')
       +'</tbody></table></div><div class="recovery-entry-footer"><span class="dim small">'+(dart.status==='closed'?'All final throws recorded. Marketplace planning is now available.':'Record the final throw for every team to finish the bonus round.')+'</span><span class="mono small">'+finalThrows+'/'+state.teams.length+' final</span></div></div>';
   }
   html += '</div>';
 
-  html += '<div class="panel phase-panel"><div class="panel-head"><h3>Phase 2 â€” Marketplace</h3><span class="badge '+(state.phaseStatus.marketplace==='open'?'badge-warn':state.phaseStatus.marketplace==='closed'?'badge-open':state.phaseStatus.marketplace==='planning'?'badge-warn':'badge-locked')+'">'+state.phaseStatus.marketplace+'</span></div>';
+  html += '<div class="panel phase-panel"><div class="panel-head"><h3>Phase 2 — Marketplace</h3><span class="badge '+(state.phaseStatus.marketplace==='open'?'badge-warn':state.phaseStatus.marketplace==='closed'?'badge-open':state.phaseStatus.marketplace==='planning'?'badge-warn':'badge-locked')+'">'+state.phaseStatus.marketplace+'</span></div>';
   if(state.phaseStatus.marketplace==='open'){
     html += '<p class="dim small">Rosters complete: '+state.teams.filter(t=>t.roster.length>=5).length+'/'+state.teams.length+'</p>'
       +'<button class="btn btn-green" onclick="closeMarketplace()">Close Marketplace &amp; Open Round 1</button>';
@@ -2866,8 +2866,8 @@ function renderAdminPhases(){
       } else if(r.status==='scored'){
         html += '<div class="recovery-entry-panel"><div class="panel-head"><h3>Recovered loose fruits recorded</h3><span class="badge badge-open">'+submitted+'/'+state.teams.length+' complete</span></div>'
           +'<div class="recovery-entry-grid">'
-          +state.teams.map(team=>'<div class="recovery-entry-card complete"><label>'+esc(team.name)+'</label><span class="mono">'+(r.recoverySubs[team.id]??'â€”')+'g recovered</span></div>').join('')
-          +'</div></div><p class="dim small" style="margin-top:12px;">Score: '+state.teams.map(t=>esc(t.name)+' '+(r.results[t.id]??'â€”')).join(' Â· ')+'</p>';
+          +state.teams.map(team=>'<div class="recovery-entry-card complete"><label>'+esc(team.name)+'</label><span class="mono">'+(r.recoverySubs[team.id]??'—')+'g recovered</span></div>').join('')
+          +'</div></div><p class="dim small" style="margin-top:12px;">Score: '+state.teams.map(t=>esc(t.name)+' '+(r.results[t.id]??'—')).join(' · ')+'</p>';
       } else {
         html += '<p class="dimmer small">Not yet reached.</p>';
       }
@@ -2878,7 +2878,7 @@ function renderAdminPhases(){
   if(state.gameClosed){
     const winner = state.teams.find(t=>t.id===state.winnerTeamId);
     html += '<div class="panel" style="border-color:var(--amber);"><div class="panel-head"><h3>Session Closed</h3></div>'
-      +'<p>Winner: <strong style="color:var(--amber);">'+esc(winner?winner.name:'â€”')+'</strong></p>'
+      +'<p>Winner: <strong style="color:var(--amber);">'+esc(winner?winner.name:'—')+'</strong></p>'
       +(state.winnerTeamId?'':'<button class="btn btn-amber" onclick="declareWinner()">Declare Winner</button>')
       +'</div>';
   }
@@ -2888,19 +2888,19 @@ function renderAdminPhases(){
 function renderAdminScoring(){
   const judges = judgeCount();
   const locked = state.phaseStatus.evp==='closed';
-  let html = '<div class="panel"><div class="panel-head"><h3>EVP Judge Scoring</h3><span class="hint">Rapid entry Â· '+judges+' judges</span></div>'
-    +'<p class="dim small">Calculate each judgeâ€™s rubric total offline, then enter one final score out of 100 per judge and team. The application averages the judge totals automatically.</p>'
-    +'<div class="kv"><span>Rubric criteria</span><span class="small">'+EVP_CRITERIA.map(c=>esc(c.label)).join(' Â· ')+'</span></div></div>'
+  let html = '<div class="panel"><div class="panel-head"><h3>EVP Judge Scoring</h3><span class="hint">Rapid entry · '+judges+' judges</span></div>'
+    +'<p class="dim small">Calculate each judge’s rubric total offline, then enter one final score out of 100 per judge and team. The application averages the judge totals automatically.</p>'
+    +'<div class="kv"><span>Rubric criteria</span><span class="small">'+EVP_CRITERIA.map(c=>esc(c.label)).join(' · ')+'</span></div></div>'
     +'<div class="panel"><table><thead><tr><th>Team</th>'+Array.from({length:judges},(_,i)=>'<th>Judge '+(i+1)+' / 100</th>').join('')+'<th>Average</th></tr></thead><tbody>'
     +state.teams.map(team=>{
       const score = calculateEVPScore(team);
       return '<tr><td><span class="color-dot" style="background:'+team.color+'"></span> '+esc(team.name)+'</td>'
         +Array.from({length:judges},(_,judge)=>'<td><input type="number" min="0" max="100" step="1" style="width:82px;" value="'+((team.evpJudgeTotals||[])[judge]??'')+'" '+(locked?'disabled':'')+' onchange="setEVPJudgeTotal(\''+team.id+'\','+judge+',this.value)"></td>').join('')
-        +'<td class="mono" id="evpAverage_'+team.id+'" style="font-weight:700;">'+(score===null?'â€”':score)+'</td></tr>';
+        +'<td class="mono" id="evpAverage_'+team.id+'" style="font-weight:700;">'+(score===null?'—':score)+'</td></tr>';
     }).join('')
     +'</tbody></table></div>';
 
-  html += '<div class="panel"><div class="panel-head"><h3>Final-Round Complementary Scoring</h3><span class="hint">One deliberated score per team Â· 0â€“20 points</span></div>'
+  html += '<div class="panel"><div class="panel-head"><h3>Final-Round Complementary Scoring</h3><span class="hint">One deliberated score per team · 0–20 points</span></div>'
     +'<p class="dim small">Enter the judges&rsquo; single agreed Complementary score after deliberation. This replaces the roster-based estimate.</p>'
     +'<table><thead><tr><th>Team</th><th>Agreed Score / 20</th><th>Complementary</th></tr></thead><tbody>'
     +state.teams.map(team=>'<tr><td>'+esc(team.name)+'</td>'
@@ -2908,11 +2908,11 @@ function renderAdminScoring(){
       +'<td class="mono" id="complementaryAverage_'+team.id+'">'+team.complementary+'</td></tr>').join('')
     +'</tbody></table></div>';
 
-  html += '<div class="panel"><div class="panel-head"><h3>Round Production Results</h3><span class="hint">Operational Ã— folding multiplier = operational + multiplier</span></div>';
+  html += '<div class="panel"><div class="panel-head"><h3>Round Production Results</h3><span class="hint">Operational × folding multiplier = operational + multiplier</span></div>';
   const scored = state.rounds.filter(r=>r.status==='scored');
   if(scored.length){
     html += '<table><thead><tr><th>Team</th>'+scored.map(r=>'<th>Round '+r.number+' Operational / Operational + Multiplier</th>').join('')+'<th>Operational</th><th>Operational + Multiplier</th></tr></thead><tbody>'
-      +state.teams.map(t=>'<tr><td>'+esc(t.name)+'</td>'+scored.map(r=>'<td class="mono">'+(r.recoveryResults[t.id]?r.recoveryResults[t.id].base+' / '+r.results[t.id]:(r.results[t.id]??'â€”'))+'</td>').join('')+'<td class="mono">'+t.rawOperational+'</td><td class="mono" style="font-weight:700;">'+t.operational+'</td></tr>').join('')
+      +state.teams.map(t=>'<tr><td>'+esc(t.name)+'</td>'+scored.map(r=>'<td class="mono">'+(r.recoveryResults[t.id]?r.recoveryResults[t.id].base+' / '+r.results[t.id]:(r.results[t.id]??'—'))+'</td>').join('')+'<td class="mono">'+t.rawOperational+'</td><td class="mono" style="font-weight:700;">'+t.operational+'</td></tr>').join('')
       +'</tbody></table>';
   } else {
     html += '<p class="dim small">No rounds scored yet.</p>';
@@ -2923,7 +2923,7 @@ function renderAdminScoring(){
 
 function renderAdminDisruptions(){
   const teamId = state.ui.selectedEventTeam || (state.teams[0] && state.teams[0].id) || '';
-  let html = '<div class="panel"><div class="panel-head"><h3>Trigger Disruption</h3><span class="hint">Round '+(state.session.currentRound||'â€”')+'</span></div>';
+  let html = '<div class="panel"><div class="panel-head"><h3>Trigger Disruption</h3><span class="hint">Round '+(state.session.currentRound||'—')+'</span></div>';
   if(state.session.currentRound===0){
     html += '<p class="dim small">Disruptions become available once Round 1 is open.</p></div>';
     return html;
@@ -2945,7 +2945,7 @@ function renderAdminDisruptions(){
     +(state.events.length ? state.events.map(e=>{
         const t = state.teams.find(x=>x.id===e.targetTeamId);
         return '<div class="event-card" style="margin-bottom:8px;"><div class="event-icon">'+e.type.slice(0,2).toUpperCase()+'</div>'
-          +'<div><div style="font-weight:600;">'+e.type+' Â· '+esc(t?t.name:'')+' Â· Round '+e.round+'</div>'
+          +'<div><div style="font-weight:600;">'+e.type+' · '+esc(t?t.name:'')+' · Round '+e.round+'</div>'
           +'<div class="dim small">'+esc(e.description)+'</div></div></div>';
       }).join('') : '<p class="dim small">No events triggered yet.</p>')
     +'</div>';
@@ -2970,7 +2970,7 @@ function renderAdminLogs(){
     +(state.logs.length ? '<table><thead><tr><th>Time</th><th>Action</th><th>Team</th><th>Detail</th></tr></thead><tbody>'
       +state.logs.map(l=>{
         const t = l.teamId ? state.teams.find(x=>x.id===l.teamId) : null;
-        return '<tr><td class="mono small">'+new Date(l.timestamp).toLocaleTimeString()+'</td><td>'+l.type+'</td><td>'+(t?esc(t.name):'â€”')+'</td><td class="dim small">'+esc(l.details)+'</td></tr>';
+        return '<tr><td class="mono small">'+new Date(l.timestamp).toLocaleTimeString()+'</td><td>'+l.type+'</td><td>'+(t?esc(t.name):'—')+'</td><td class="dim small">'+esc(l.details)+'</td></tr>';
       }).join('')+'</tbody></table>' : '<p class="dim small">No actions logged yet.</p>')
     +'</div>';
 }
@@ -3001,7 +3001,7 @@ function render(){
   } else {
     html = renderTopbar() + renderTeamPortal();
   }
-  html += '<div class="footer-tick"><span>Workforce Strategy Simulation Â· '+(sharedDb?'shared session':'browser-local session')+'</span><span>'+new Date().toLocaleString()+'</span></div>';
+  html += '<div class="footer-tick"><span>Workforce Strategy Simulation · '+(sharedDb?'shared session':'browser-local session')+'</span><span>'+new Date().toLocaleString()+'</span></div>';
   html += renderConfirmModal();
   app.innerHTML = html;
 }
