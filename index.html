@@ -2307,7 +2307,7 @@ function renderCompanyProfile(){
       +'<h2>THE HOW: Simulation Mechanics</h2>'
       +'<p>The simulation unfolds over several cycles, with each cycle representing one quarter of operations. You will navigate three distinct phases:</p>'
       +'<ol class="company-profile-list">'
-        +'<li><strong>Phase 1: EVP Craft &amp; Presentation</strong> - You will craft an Employee Value Proposition based on the company profile, values, and philosophy, then share it with the facilitator through an agreed third-party channel. Your score will determine your starting budget of game coins.</li>'
+        +'<li><strong>Phase 1: EVP Craft &amp; Submission</strong> - You will craft an Employee Value Proposition based on the company profile, values, and philosophy, then share it with the facilitator through an agreed third-party channel. Your score will determine your starting budget of game coins.</li>'
         +'<li><strong>Phase 2: The Marketplace</strong> - Using your budget, you will enter a first-come, first-served draft to build a 5-person roster. Gold talents demonstrate stronger skills accross all work areas, while Silver talents have a specialization area (high skill in one specific area) and demonstrate low to moderate skills in other areas. Bronze talents are available as a last-resort fallback.</li>'
         +'<li><strong>Phase 3: Core Operations</strong> - Quarter by quarter, you will deploy your roster across five critical palm oil mill workstations (FFB Grading, Sterilization, Threshing, Pressing, and Clarification). You will face dynamic quarterly updates, conduct Town Hall meetings, and adjust your strategy to maximize output and growth.</li>'
       +'</ol>'
@@ -2348,7 +2348,7 @@ function renderSimulationRoadmap(team){
   return '<div class="panel team-roadmap"><div class="panel-head"><h3>Simulation Roadmap</h3><span class="hint">'+(state.gameClosed?'Session complete':phaseLabel())+'</span></div>'
     +'<p class="dim small">Follow the phases from left to right. Green means complete, amber is your current focus, and grey is coming next.</p>'
     +'<div class="simulation-roadmap">'
-      +phase(1,'EVP Craft & Presentation','Use the company profile, values, and philosophy to craft and share your strategy for evaluation.',evpDone?'done':evpCurrent?'current':'',''+(evpDone?'Completed':evpCurrent?'In progress':'Upcoming'))
+      +phase(1,'EVP Craft & Submission','Use the company profile, values, and philosophy to craft and share your strategy for evaluation.',evpDone?'done':evpCurrent?'current':'',''+(evpDone?'Completed':evpCurrent?'In progress':'Upcoming'))
       +phase(2,'The Marketplace','Use your budget to build a 5-person roster with the available talents in the marketplace.',recruitmentDone?'done':recruitmentCurrent?'current':'',recruitmentDone?'Completed':recruitmentCurrent?'In progress':'Upcoming')
       +phase(3,'Core Operations','Place talent, develop skills, rotate roles, and complete each quarterly round.',operationsDone?'done':operationsCurrent?'current':'',operationsDone?'Completed':operationsCurrent?'Round '+state.session.currentRound+' of '+state.rounds.length:'Upcoming','<div class="roadmap-round-progress">'+roundProgress+'</div>')
       +phase(4,'Results & Leaderboard','The facilitator completes the metrics and rubrics, then publishes the results.',scoringDone?'done':scoringCurrent?'current':'',scoringDone?'Published':scoringCurrent?'Awaiting facilitator':'Upcoming')
@@ -2373,7 +2373,7 @@ function renderTeamDashboard(team){
 
 function renderEVPWorkspace(team){
   if(state.phaseStatus.evp==='locked'){
-    return '<div class="panel"><div class="panel-head"><h3>EVP Craft &amp; Presentation</h3></div><p class="dim">This phase has not been unlocked by the facilitator yet.</p></div>';
+    return '<div class="panel"><div class="panel-head"><h3>EVP Craft &amp; Submission</h3></div><p class="dim">This phase has not been unlocked by the facilitator yet.</p></div>';
   }
   return '<div class="grid grid-2">'
     +'<div class="panel"><div class="panel-head"><h3>Craft Your EVP Strategy</h3><span class="badge badge-warn">Phase 1</span></div>'
