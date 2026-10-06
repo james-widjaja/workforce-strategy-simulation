@@ -2477,8 +2477,8 @@ function renderOpsDashboard(team){
   const talentMobility = readinessHistory.reduce((sum,entry)=>sum+(Number(entry.rotationCount)||0),0);
   const latestSuccession = readinessHistory.length ? readinessHistory[readinessHistory.length-1].successionReady : 0;
   const control = foldingControl();
-  const foldingPanel = round && round.status==='open' && round.teamSubs[team.id]
-    ? '<div class="panel"><div class="panel-head"><h3>Recovery of Loose Fruits</h3><span class="hint">Target '+control.budget+' grams</span></div>'
+  const recoveryPanel = round && round.status==='open' && round.teamSubs[team.id]
+    ? '<div class="panel"><div class="panel-head"><h3>Loose Fruit Recovery Challenge</h3><span class="hint">Target '+control.budget+' grams</span></div>'
       +'<p class="dim small">Recover loose fruits during the physical activity. Your result changes this round\'s operational score: '+control.belowMultiplier+'× below target (&lt;60g), '+control.neutralMultiplier+'× can improve (60g to &lt;70g), '+control.targetMultiplier+'× achieve budget (70g–90g), '+control.overachieveMultiplier+'× overachieve (&gt;90g and &le;120g), '+control.exceedMultiplier+'× excellent (&gt;120g).</p>'
       +(round.folding.status==='running'
         ? '<div class="timer-box warn" style="margin:12px 0;"><div class="label">Recovery time remaining</div><div class="value" id="foldingTimer">'+formatTimer(timerRemaining(round.folding.endsAt))+'</div></div>'
@@ -2489,11 +2489,11 @@ function renderOpsDashboard(team){
       +'</div>' : '';
   return '<div class="stack">'
     +'<div class="grid grid-4">'
-      +'<div class="panel"><div class="panel-head"><h3>Operational + Multiplier</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+team.operational+'</div><div class="dim small">cumulative score after folding multipliers</div></div>'
+      +'<div class="panel"><div class="panel-head"><h3>Operational + Multiplier</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+team.operational+'</div><div class="dim small">cumulative score after loose-fruit recovery multipliers</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Skill Growth</h3></div><div class="mono" style="font-size:26px;font-weight:700;">+'+skillGrowth+'</div><div class="dim small">total development increment</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Talent Mobility</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+talentMobility+'</div><div class="dim small">goal: rotate at least '+(Math.floor(teamRoster(team).length/2)+1)+' of '+teamRoster(team).length+' talents between consecutive rounds</div></div>'
       +'<div class="panel"><div class="panel-head"><h3>Successor Identified?</h3></div><div class="mono" style="font-size:26px;font-weight:700;">'+latestSuccession+'</div><div class="dim small">goal: Any active talent with skill &gt;75 in 4+ areas · 1=+5, 2=+10, 3+=+15</div></div>'
-    +'</div>'+foldingPanel
+    +'</div>'+recoveryPanel
     +'<div class="panel"><div class="panel-head"><h3>Round Results</h3></div>'
     +(scored.length ? '<table><thead><tr><th>Round</th><th>Operational</th><th>Recovered (grams)</th><th>Multiplier</th><th>Operational + Multiplier</th></tr></thead><tbody>'
       +scored.map(r=>'<tr><td>Round '+r.number+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].base:'—')+'</td><td class="mono">'+(r.recoveryResults[team.id]?r.recoveryResults[team.id].recoveredGrams:'—')+'</td><td class="mono">'+(r.recoveryResults[team.id]?'×'+r.recoveryResults[team.id].multiplier:'—')+'</td><td class="mono">'+(r.results[team.id]!==undefined?r.results[team.id]:'—')+'</td></tr>').join('')
