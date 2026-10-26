@@ -705,6 +705,8 @@ recomputeAllScores();
 let sharedDb = null;
 let applyingRemoteState = false;
 let authUid = null;
+let serverTimeOffset = 0;
+let serverTimeOffsetReady = true;
 
 function applyTheme(){
   const theme = state.ui && state.ui.theme === 'dark' ? 'dark' : 'light';
@@ -901,11 +903,38 @@ function normalizeTeamCodes(sessionState){
   }
   return sessionState;
 }
-function save(){
+function save(options){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   localStorage.setItem(LOCAL_UI_KEY, JSON.stringify({role:state.role, ui:state.ui}));
   if(sharedDb && !applyingRemoteState){
-    sharedDb.set(sharedState()).catch(function(error){
+    const nextState = sharedState();
+    const preserveAssignments = !(options && options.allowAssignmentUnlocks);
+    sharedDb.transaction(function(current){
+      if(!current) return nextState;
+      const latest = normalizeTeamCodes(JSON.parse(JSON.stringify(current)));
+      const merged = normalizeTeamCodes(JSON.parse(JSON.stringify(nextState)));
+      if(preserveAssignments){
+        merged.rounds.forEach(function(round, index){
+          const latestRound = latest.rounds[index];
+          if(!latestRound) return;
+          latest.teams.forEach(function(team){
+            if(!latestRound.teamSubs[team.id]) return;
+            round.teamSubs[team.id] = true;
+            merged.assignments = merged.assignments.filter(function(assignment){
+              return !(assignment.teamId===team.id && assignment.round===round.number);
+            });
+            latest.assignments.forEach(function(assignment){
+              if(assignment.teamId===team.id && assignment.round===round.number){
+                merged.assignments.push(assignment);
+              }
+            });
+          });
+        });
+      }
+      delete merged.role;
+      delete merged.ui;
+      return merged;
+    }).catch(function(error){
       console.error('Unable to save shared session.', error);
       toast('Shared session could not be saved.', 'err');
     });
@@ -924,7 +953,7 @@ function load(){
   loaded.ui.theme = loaded.ui.theme === 'dark' ? 'dark' : 'light';
   return loaded;
 }
-function persistAndRender(){ save(); render(); }
+function persistAndRender(options){ save(options); render(); }
 
 function initSharedSync(){
   if(!firebaseConfigured()){
@@ -936,6 +965,16 @@ function initSharedSync(){
     firebase.auth().signInAnonymously().then(function(userCredential){
       authUid = userCredential.user.uid;
       sharedDb = firebase.database().ref('sessions/'+SHARED_SESSION_ID);
+      serverTimeOffsetReady = false;
+      firebase.database().ref('.info/serverTimeOffset').on('value', function(snapshot){
+        serverTimeOffset = Number(snapshot.val())||0;
+        serverTimeOffsetReady = true;
+        liveTimerTick();
+      }, function(error){
+        console.error('Unable to read Firebase server time offset.', error);
+        serverTimeOffsetReady = true;
+        toast('Timer synchronization is using this device clock.', 'warn');
+      });
       sharedDb.on('value', function(snapshot){
         if(applyingRemoteState) return;
         const remote = snapshot.val();
@@ -998,21 +1037,24 @@ function formatTimer(ms){
   const seconds = Math.max(0, Math.ceil(ms/1000));
   return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
 }
-function timerRemaining(endsAt){ return endsAt ? Math.max(0, new Date(endsAt).getTime()-Date.now()) : 0; }
+function simulationNow(){ return Date.now()+serverTimeOffset; }
+function timerRemaining(endsAt){ return endsAt ? Math.max(0, new Date(endsAt).getTime()-simulationNow()) : 0; }
 function liveTimerTick(){
+  if(!serverTimeOffsetReady) return;
   const control = evpControl();
   let changed = false;
+  const canEndTimers = !!(state.role && state.role.type==='facilitator');
   if(control.draftStatus==='running'){
     const remaining = timerRemaining(control.draftEndsAt);
     const display = document.getElementById('evpDraftTimer');
     if(display) display.textContent = formatTimer(remaining);
-    if(remaining===0){ control.draftStatus='ended'; control.draftEndsAt=null; changed=true; toast('EVP drafting time is up.', 'warn'); }
+    if(remaining===0 && canEndTimers){ control.draftStatus='ended'; control.draftEndsAt=null; changed=true; toast('EVP drafting time is up.', 'warn'); }
   }
   if(control.presentationStatus==='running'){
     const remaining = timerRemaining(control.presentationEndsAt);
     const display = document.getElementById('evpPresentationTimer');
     if(display) display.textContent = formatTimer(remaining);
-    if(remaining===0){ control.presentationStatus='ended'; control.presentationEndsAt=null; changed=true; toast('Presentation time is up — hard stop.', 'warn'); }
+    if(remaining===0 && canEndTimers){ control.presentationStatus='ended'; control.presentationEndsAt=null; changed=true; toast('Presentation time is up — hard stop.', 'warn'); }
   }
   if(control.planningStatus==='running'){
     const remaining = timerRemaining(control.planningEndsAt);
@@ -1020,14 +1062,14 @@ function liveTimerTick(){
     if(display) display.textContent = formatTimer(remaining);
     const teamDisplay = document.getElementById('teamMarketplacePlanningTimer');
     if(teamDisplay) teamDisplay.textContent = formatTimer(remaining);
-    if(remaining===0){ control.planningStatus='ended'; control.planningEndsAt=null; changed=true; toast('Marketplace planning time is up.', 'warn'); }
+    if(remaining===0 && canEndTimers){ control.planningStatus='ended'; control.planningEndsAt=null; changed=true; toast('Marketplace planning time is up.', 'warn'); }
   }
   const round = state.rounds[state.session.currentRound-1];
   if(round && round.folding && round.folding.status==='running'){
     const remaining = timerRemaining(round.folding.endsAt);
     const display = document.getElementById('foldingTimer');
     if(display) display.textContent = formatTimer(remaining);
-    if(remaining===0){ round.folding.status='ended'; round.folding.endsAt=null; changed=true; toast('Loose-fruit recovery time is up.', 'warn'); }
+    if(remaining===0 && canEndTimers){ round.folding.status='ended'; round.folding.endsAt=null; changed=true; toast('Loose-fruit recovery time is up.', 'warn'); }
   }
   if(changed) persistAndRender();
 }
@@ -1232,12 +1274,14 @@ function setRoundFoldingMinutes(roundNumber, value){
 function startFoldingRound(){
   const round = state.rounds[state.session.currentRound-1];
   if(!round || round.status!=='open') return;
+  if(!serverTimeOffsetReady){ toast('Synchronizing the session clock. Please try starting the timer again shortly.', 'warn'); return; }
+  if(round.folding.status!=='locked') return;
   const locked = state.teams.filter(t=>round.teamSubs[t.id]).length;
   if(locked < state.teams.length){ toast('All team assignments must be locked before folding starts.', 'warn'); return; }
   round.folding.status = 'running';
   const minutes = roundFoldingMinutes(round);
   round.folding.minutes = minutes;
-  round.folding.endsAt = new Date(Date.now()+minutes*60000).toISOString();
+  round.folding.endsAt = new Date(simulationNow()+minutes*60000).toISOString();
   logAction('TimerStart', null, 'Loose-fruit recovery started for Round '+round.number+' ('+minutes+' minutes)');
   persistAndRender();
 }
@@ -1479,8 +1523,6 @@ function submitLeapNomination(talentId){
   event.nominations[team.id] = talent.id;
   event.description = 'Global LEAP nomination window: '+Object.keys(event.nominations).length+'/'+state.teams.length+' teams submitted.';
   if(Object.keys(event.nominations).length===state.teams.length) event.status = 'Triggered';
-  const r = state.rounds[round-1];
-  if(r) r.teamSubs[team.id] = false;
   const currentRound = state.rounds[round-1];
   if(currentRound && currentRound.status==='scored' && currentRound.recoveryResults[team.id]){
     const base = computeOperationalForRound(team, round);
@@ -1530,9 +1572,11 @@ function setMarketplacePlanningMinutes(value){
 }
 function startEVPDraftTimer(){
   const control = evpControl();
+  if(!serverTimeOffsetReady){ toast('Synchronizing the session clock. Please try starting the timer again shortly.', 'warn'); return; }
+  if(control.draftStatus==='running') return;
   if(control.draftStatus==='ended'){ toast('EVP drafting time has already ended.', 'warn'); return; }
   control.draftStatus = 'running';
-  control.draftEndsAt = new Date(Date.now()+control.draftMinutes*60000).toISOString();
+  control.draftEndsAt = new Date(simulationNow()+control.draftMinutes*60000).toISOString();
   logAction('TimerStart', null, 'EVP drafting timer started for '+control.draftMinutes+' minutes');
   persistAndRender();
 }
@@ -1557,10 +1601,13 @@ function randomizePresentationOrder(){
 }
 function startPresentationTimer(){
   const control = evpControl();
+  if(!serverTimeOffsetReady){ toast('Synchronizing the session clock. Please try starting the timer again shortly.', 'warn'); return; }
+  if(control.presentationStatus==='running') return;
+  if(control.presentationStatus==='ended'){ toast('End the current presentation before starting another.', 'warn'); return; }
   if(!control.presentationOrder.length){ toast('Randomize the presentation order first.', 'warn'); return; }
   if(control.presentationIndex>=control.presentationOrder.length){ toast('All team presentations are complete.', 'warn'); return; }
   control.presentationStatus = 'running';
-  control.presentationEndsAt = new Date(Date.now()+control.presentationMinutes*60000).toISOString();
+  control.presentationEndsAt = new Date(simulationNow()+control.presentationMinutes*60000).toISOString();
   const team = state.teams.find(t=>t.id===control.presentationOrder[control.presentationIndex]);
   logAction('TimerStart', team&&team.id, control.presentationMinutes+'-minute EVP presentation timer started');
   persistAndRender();
@@ -1624,6 +1671,7 @@ function recordDartThrow(teamId, throwIndex, value){
 }
 function startMarketplacePlanningTimer(){
   const control = evpControl();
+  if(!serverTimeOffsetReady){ toast('Synchronizing the session clock. Please try starting the timer again shortly.', 'warn'); return; }
   if(state.phaseStatus.marketplace!=='planning') return;
   if(state.phaseStatus.evp!=='closed' || !hasCompleteEVPScores(state)){
     toast('Complete and apply all EVP scores before starting Marketplace planning.', 'warn');
@@ -1632,7 +1680,7 @@ function startMarketplacePlanningTimer(){
   if(control.planningStatus==='running'){ return; }
   if(control.planningStatus==='ended'){ toast('Marketplace planning time has already ended.', 'warn'); return; }
   control.planningStatus = 'running';
-  control.planningEndsAt = new Date(Date.now()+control.planningMinutes*60000).toISOString();
+  control.planningEndsAt = new Date(simulationNow()+control.planningMinutes*60000).toISOString();
   logAction('TimerStart', null, 'Marketplace planning timer started for '+control.planningMinutes+' minutes');
   persistAndRender();
 }
@@ -1682,6 +1730,7 @@ function doCloseMarketplace(){
 
 function lockTeamRound(team, round){
   const r = state.rounds[round-1];
+  if(!r || r.teamSubs[team.id]) return;
   r.teamSubs[team.id] = true;
   logAction('RoundLock', team.id, 'Locked assignment for round '+round);
   persistAndRender();
@@ -1770,7 +1819,7 @@ function doApplyTeamConfig(n,p){
   state.role = {type:'facilitator'};
   state.ui.route = 'admin';
   state.ui.adminTab = 'teams';
-  persistAndRender();
+  persistAndRender({allowAssignmentUnlocks:true});
   toast(n+' teams rebuilt at '+p+' players/team.');
 }
 
@@ -1793,7 +1842,7 @@ function doResetSimulation(){
     state.ui.route = 'admin';
     state.ui.adminTab = 'teams';
   }
-  persistAndRender();
+  persistAndRender({allowAssignmentUnlocks:true});
   toast('Simulation reset — fresh session ready.');
 }
 
@@ -1866,7 +1915,7 @@ function doSeedSixTeamRehearsal(targetRounds){
     state.rounds[0].teamSubs[team.id] = true;
   });
   logAction('RehearsalSeed', null, 'Six-team rehearsal populated through Round 1 assignment locks');
-  persistAndRender();
+  persistAndRender({allowAssignmentUnlocks:true});
   toast('Six-team rehearsal loaded through locked Round 1 assignments.');
 }
 
@@ -2163,6 +2212,8 @@ function onDropZone(ev, area){
   const team = currentTeam();
   if(!team || !requireTeamLeader(team.id) || !dragTalentId) return;
   const round = state.session.currentRound;
+  const roundState = state.rounds[round-1];
+  if(!roundState || roundState.status!=='open' || roundState.teamSubs[team.id]) return;
   const key = team.id+'_'+round;
   const draft = draftFor(team.id, round);
   const talentId = dragTalentId;
@@ -2191,6 +2242,8 @@ function onDropTray(ev){
   const team = currentTeam();
   if(!team || !requireTeamLeader(team.id) || !dragTalentId) return;
   const round = state.session.currentRound;
+  const roundState = state.rounds[round-1];
+  if(!roundState || roundState.status!=='open' || roundState.teamSubs[team.id]) return;
   const key = team.id+'_'+round;
   const draft = draftFor(team.id, round);
   Object.keys(draft).forEach(a=>{ if(draft[a]===dragTalentId) delete draft[a]; });
@@ -2204,6 +2257,12 @@ function lockPlanningBoard(){
   const team = currentTeam();
   if(!team || !requireTeamLeader(team.id)) return;
   const round = state.session.currentRound;
+  const roundState = state.rounds[round-1];
+  if(!roundState || roundState.status!=='open') return;
+  if(roundState.teamSubs[team.id]){
+    toast('This round assignment is already locked.', 'warn');
+    return;
+  }
   const key = team.id+'_'+round;
   const draft = draftFor(team.id, round);
   const validation = validateDraftPlacements(team, draft, true);
@@ -3011,5 +3070,3 @@ initSharedSync();
 </script>
 </body>
 </html>
-
-
